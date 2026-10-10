@@ -235,7 +235,7 @@ a { color: inherit; }
 .profile-list-head { display: flex; align-items: baseline; justify-content: space-between; gap: 9px; padding-bottom: 11px; }
 .profile-list-head h2 { margin: 0; font-size: 16px; }
 .profile-list-head span { color: var(--muted); font-size: 11px; text-align: right; }
-.language-wrap .language-select { max-width: 120px; }
+.language-wrap .language-select { min-width: 130px; max-width: 130px; }
 .currency-select { min-width: 82px; min-height: 42px; padding: 0 24px 0 9px; color: #53634d; font-size: 12px; font-weight: 900; border: 1px solid #e8ecdf; border-radius: 12px; background: #fbfcf8; }
 .money-input-wrap .currency-select { margin-right: -5px; }
 .currency-note { display: flex; gap: 7px; margin: 9px 0 0; color: #8a6637; font-size: 11px; line-height: 1.4; }
@@ -746,8 +746,8 @@ body, :root { --canvas: #fff; background: #fff; }
   .journey-topbar .language-globe { left: 7px; }
   .landing { padding: 8px 13px 28px; }
   .hero-card { grid-template-columns: none; min-height: 0; padding: 4px 5px 0; }
-  .hero-mascot-wrap { width: min(100%, 205px); min-height: 0; margin: 0 auto 2px; }
-  .hero-mascot, .hero-mascot.platform { width: min(100%, 178px); max-height: 176px; }
+  .hero-mascot-wrap { width: min(100%, 280px); min-height: 0; margin: 0 auto 2px; }
+  .hero-mascot, .hero-mascot.platform { width: min(100%, 260px); max-height: 260px; }
   .hero-title { max-width: 370px; font-size: clamp(39px, 10.5vw, 45px); }
   .hero-subtitle { max-width: 300px; margin: 9px auto 0; font-size: 14px; }
   .search-card { grid-template-columns: 1fr; gap: 11px; margin: 19px 3px 0; padding: 0; }

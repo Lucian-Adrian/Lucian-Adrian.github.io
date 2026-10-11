@@ -1,26 +1,31 @@
+const DEMO_MODE = new URLSearchParams(window.location.search).get("demo") === "1";
 const STORAGE_KEY = "domi-product-preview-v1";
 const APP_LANGUAGES = ["en", "ro", "es"];
 
 const WORDS = {
   en: {
-    tagline: "A home that fits.", searchTitle: "A home that fits.", searchSub: "Find a place that feels right. Meet people who make it feel like home.",
+    tagline: "A home that fits.", searchTitle: "First, find the place.", searchSub: "Then find the people who could make it home.",
     where: "Where would you like to live?", destination: "Destination city", cityPlaceholder: "Berlin, New York, Chișinău...", search: "Search",
     promiseBrowse: "Start with the place", promiseBrowseText: "See homes and people before building a profile.", promisePrivate: "Your pace, your privacy", promisePrivateText: "Add only the details that help you find a fit.",
     footerLocal: "This preview keeps your choices on this device.", footerTagline: "Choose a place. Find your people. Build a home together.",
+    welcomeFootnote: "Start with a place. Make it yours.",
     language: "Language", back: "Back", next: "Continue", skip: "Skip for now", saveAnswer: "Save answer",
-    chapterMove: "Find your place", chapterMoney: "Make the numbers work", chapterLife: "Life together", chapterMeet: "Meet your people",
-    stepOf: "Question", optional: "Optional", backToResults: "Back to results", profileTitle: "Make your matches feel like you", profileSub: "A few thoughtful answers help us bring the right homes and people closer. Skip anything you are not ready to share.",
+    shareApp: "Share sample", copyLink: "Copy link", shareLinkHelp: "Open or copy this link to try the sample search. It contains no saved choices.", installApp: "Install", appInstalled: "Domi is ready on your home screen.", shareCopied: "Sample link copied. It does not include your saved choices.",
+    installHelpTitle: "Keep Domi close", installHelpText: "In Safari, tap Share, then choose Add to Home Screen. This keeps the app on your device.",
+    demoTitle: "Sample journey · Bucharest", demoText: "Save a room, then open Saved to see your shortlist take shape.", demoPeople: "Meet fictional profiles and compare the routines they choose to share.", demoSaved: "Your shortlist keeps the homes and people you want to compare.", demoSavedWithGroup: "Open a saved room, then add it to your shared list.", demoTogether: "Start a shared search, then plan a viewing together.", demoTogetherStarted: "Choose a saved room for the shared list, then plan a viewing.", demoSearchNote: "A guided sample · fictional homes and people", demoReset: "Restart",
+    chapterMove: "Your search", chapterMoney: "Rent comfort", chapterLife: "Daily life", chapterMeet: "Your introduction",
+    stepOf: "Question", optional: "Optional", backToResults: "Back to results", profileTitle: "What should shape your search?", profileSub: "Answer what you know. Skip anything undecided. You can keep browsing and change these later.",
     finishTitle: "Your search is taking shape", finishSub: "Your answers can help sort homes and people by what matters to you. You can change them any time.",
     profileCta: "Personalize my results", editProfile: "Edit my answers", finish: "See my matches", profilePrivate: "Your answers stay on this device in this preview. Your private rent limit is never shown to other people.",
     home: "Homes", people: "People", together: "Together", saved: "Saved", you: "You",
-    resultsHomes: "Homes in", resultsPeople: "People near", homesSub: "A place to start imagining what comes next.", peopleSub: "People looking for a home around the same place.",
+    resultsHomes: "Homes in", resultsPeople: "People near", peopleSub: "People looking for a home around the same place.",
     changePlace: "Change place", filters: "Filters", sort: "Sort", allHomes: "All homes", rooms: "Rooms", wholeHomes: "Whole homes", clearFilters: "Clear",
-    previewData: "Example for preview", previewPeople: "Example profile", sourceUnknown: "Source details unavailable", observed: "Source checked", askRent: "Rent not listed", perMonth: "/ month",
+    previewData: "Example home", previewPeople: "Example profile", sourceUnknown: "Source details unavailable", observed: "Source checked", askRent: "Rent not listed", perMonth: "/ month",
     sourceTag: "Listing source", bills: "Bills", deposit: "Deposit", unknown: "Not provided", availability: "Availability", availabilityUnknown: "Needs confirmation", bedrooms: "Bedrooms", roomsCount: "Rooms", size: "Area", fit: "Fits your search",
     noHomes: "No homes shown for this city yet", noHomesText: "This preview has no home data for {place}. Try one of the cities with preview homes, or keep your search ready for new listings.", tryBerlin: "Explore Berlin listings", searchElse: "Change destination", firstSearch: "Search another city", locationRequired: "Enter a city to start your search.",
     noPeople: "No people shown here yet", noPeopleText: "There are no profiles in this preview for {place}. You can still explore your own match preferences.",
-    tailorTitle: "A little more you, a better starting point", tailorText: "Answer a few optional questions to sort homes and potential housemates around your plans.",
-    startQuestions: "Build my profile", homeDetails: "Home details", personDetails: "About", description: "About this place", costs: "What the price includes", fitDetails: "Why this may fit", notKnown: "Not confirmed", features: "Features", askHost: "Confirm with the host", listingInfo: "Listing information", openSource: "Open original source", hide: "Hide", save: "Save", savedLabel: "Saved", viewProfile: "View profile", connect: "Start an introduction",
+    tailorTitle: "Refine your search", tailorText: "Add what matters to you.",
+    startQuestions: "Set my preferences", homeDetails: "Home details", personDetails: "About", description: "About this place", costs: "What the price includes", fitDetails: "Why this may fit", notKnown: "Not confirmed", features: "Features", askHost: "Confirm with the host", listingInfo: "Listing information", openSource: "Open original source", hide: "Hide", save: "Save", savedLabel: "Saved", viewProfile: "View profile", connect: "Start an introduction",
     privateRent: "Personal rent share", wholeRent: "Whole home rent", moneyNoCurrency: "Choose a currency", costNote: "Bills and deposit are shown only when the listing provides them. No split is assumed.", sampleNote: "Preview records are clearly labelled. Unknown details stay unknown; confirm current availability and costs at the original source.",
     rankingTitle: "Your results learn from your choices", rankingText: "Your answers, saved places and hidden cards can adjust this order on this device. A missing detail never counts as a mismatch.", rankingChanged: "Your order changed because you saved or hid a result.", hidePrompt: "Why hide this?", hideTooCostly: "Over my budget", hideWrongArea: "Wrong area", hideWrongSpace: "Wrong kind of home", hideMissing: "Not enough information", hideOther: "Not for me", hiddenNote: "Hidden from your results on this device.", undo: "Undo",
     askIntro: "A good first hello starts with a little context.", introDraft: "Introduction draft", introName: "Your name", introMessage: "Your message", introPlaceholder: "Hi! I’m looking for a calm, friendly home in this area...", introPreview: "Review introduction", keepDraft: "Save draft here", draftSaved: "Saved as a local draft. Nothing was sent.", draftOnly: "This is a preview. Saving keeps the text on this device; it does not contact anyone.",
@@ -33,29 +38,33 @@ const WORDS = {
     groupNone: "Your shared search starts here", groupNoneText: "Create a shortlist you can discuss, collect open questions and plan a viewing together.",
     savedTitle: "Keep the good possibilities close", savedSub: "Saved homes and people stay together here.", noSaved: "Nothing saved yet", noSavedText: "Tap the heart on a home or save a person to build your shortlist.",
     youTitle: "Your search, in your hands", youSub: "See what you have shared with yourself, update your answers and manage this preview.", profileStatus: "Profile progress", answered: "answered", complete: "complete", unanswered: "Not answered", skippedStatus: "Skipped for now", changeAnswer: "Change", resume: "Continue my profile",
-    privacy: "Privacy and language", localOnly: "Preview data stays on this device.", dataTitle: "Your data", dataText: "Export or clear answers, saved cards and shared-search drafts from this browser.", export: "Download my data", reset: "Clear this preview", resetConfirm: "Clear your saved answers, shortlists and drafts from this device?", clearEverything: "Clear everything", cancel: "Keep my data", resetDone: "This device is clear. Start a fresh search any time.",
+    privacy: "Privacy and language", localOnly: "Preview data stays on this device.", dataTitle: "Your data", dataText: "Export or clear answers, saved cards and shared-search drafts from this browser.", export: "Download my data", reset: "Clear this preview", resetConfirm: "Clear your saved answers, shortlists and drafts from this device?", clearEverything: "Clear everything", cancel: "Cancel", keepData: "Keep my data", resetDone: "This device is clear. Start a fresh search any time.",
     resultsOrder: "Homes are ordered using the details you chose. Missing listing details remain unknown.", homePlan: "Plan a viewing", noProposal: "No contribution proposals yet", noEvents: "No viewing plans yet", unknownPersonDetails: "Not shared", savePerson: "Save person", groupExists: "You already have a shared search here.",
     ariaClose: "Close", priceLabel: "Monthly rent", messageRequired: "Write a short introduction first.", placeNotFound: "Choose a destination city.", unknownCity: "We can keep this search ready even when the preview has no listings.", demoCity: "Preview city", amountHelp: "This amount is personal and stays private. It only helps sort rent you may be comfortable with.", maxHelp: "This is a private ceiling for your own search. It is never shown on your profile or to other people.", skipKeepsUnknown: "Skip leaves this detail unknown. You can fill it in later.", chooseOrSkip: "Choose an answer or skip this question to keep the detail unknown.", budgetConflict: "Your private maximum is below the rent you said feels comfortable. Adjust either amount before continuing.",
   },
   ro: {
-    tagline: "O casă pe măsura ta.", searchTitle: "O casă pe măsura ta.", searchSub: "Găsește un loc potrivit. Cunoaște oameni care îl pot transforma în acasă.",
+    tagline: "O casă pe măsura ta.", searchTitle: "Mai întâi, găsește locul.", searchSub: "Apoi, găsește oamenii alături de care te simți acasă.",
     where: "Unde ai vrea să locuiești?", destination: "Orașul dorit", cityPlaceholder: "Berlin, New York, Chișinău...", search: "Caută",
     promiseBrowse: "Începe cu locul", promiseBrowseText: "Vezi locuințele și oamenii înainte să-ți completezi profilul.", promisePrivate: "Ritmul și intimitatea ta", promisePrivateText: "Adaugă doar detaliile care te ajută să găsești o potrivire.",
     footerLocal: "În această previzualizare, alegerile rămân pe acest dispozitiv.", footerTagline: "Alege un loc. Găsește-ți oamenii. Construiți împreună un cămin.",
+    welcomeFootnote: "Începe cu un loc. Fă-l să se simtă ca acasă.",
     language: "Limba", back: "Înapoi", next: "Continuă", skip: "Sar peste deocamdată", saveAnswer: "Salvează răspunsul",
-    chapterMove: "Alege locul potrivit", chapterMoney: "Stabilește bugetul", chapterLife: "Viața împreună", chapterMeet: "Cunoaște-ți oamenii",
-    stepOf: "Întrebarea", optional: "Opțional", backToResults: "Înapoi la rezultate", profileTitle: "Potriviri care ți se potrivesc", profileSub: "Câteva răspunsuri alese te ajută să găsești locuințe și oameni potriviți. Poți sări peste ce nu vrei să împărtășești.",
+    shareApp: "Distribuie exemplul", copyLink: "Copiază linkul", shareLinkHelp: "Deschide sau copiază linkul pentru a încerca exemplul. Nu conține alegerile tale.", installApp: "Instalează", appInstalled: "Domi este pe ecranul principal.", shareCopied: "Linkul către exemplu a fost copiat. Nu include alegerile tale.",
+    installHelpTitle: "Păstrează Domi aproape", installHelpText: "În Safari, apasă pe Distribuie, apoi Adaugă la ecranul principal. Aplicația rămâne pe dispozitivul tău.",
+    demoTitle: "Parcurs demonstrativ · București", demoText: "Salvează o cameră, apoi deschide Salvate pentru a vedea lista.", demoPeople: "Cunoaște profilurile fictive și compară rutinele pe care oamenii aleg să le împărtășească.", demoSaved: "Lista păstrează locuințele și persoanele pe care vrei să le compari.", demoSavedWithGroup: "Deschide o cameră salvată și adaug-o în lista comună.", demoTogether: "Începeți o căutare comună, apoi planificați o vizionare.", demoTogetherStarted: "Alege o cameră salvată pentru lista comună, apoi planificați o vizionare.", demoSearchNote: "Exemplu ghidat · locuințe și profiluri fictive", demoReset: "Reia",
+    chapterMove: "Căutarea ta", chapterMoney: "Chiria potrivită", chapterLife: "Viața de zi cu zi", chapterMeet: "Prezentarea ta",
+    stepOf: "Întrebarea", optional: "Opțional", backToResults: "Înapoi la rezultate", profileTitle: "Ce ar trebui să conteze în căutare?", profileSub: "Răspunde la ce știi. Poți sări peste ce nu ai decis și poți schimba răspunsurile mai târziu.",
     finishTitle: "Căutarea ta prinde contur", finishSub: "Răspunsurile te pot ajuta să vezi mai întâi locuințele și oamenii care contează pentru tine. Le poți schimba oricând.",
     profileCta: "Personalizează rezultatele", editProfile: "Editează răspunsurile", finish: "Vezi potrivirile", profilePrivate: "În această previzualizare, răspunsurile rămân pe dispozitiv. Limita ta personală de chirie nu este afișată altor persoane.",
     home: "Locuințe", people: "Oameni", together: "Împreună", saved: "Salvate", you: "Tu",
-    resultsHomes: "Locuințe în", resultsPeople: "Oameni aproape de", homesSub: "Un loc de la care poți începe să-ți imaginezi ce urmează.", peopleSub: "Oameni care caută o locuință în aceeași zonă.",
+    resultsHomes: "Locuințe în", resultsPeople: "Oameni aproape de", peopleSub: "Oameni care caută o locuință în aceeași zonă.",
     changePlace: "Schimbă orașul", filters: "Filtre", sort: "Ordonează", allHomes: "Toate locuințele", rooms: "Camere", wholeHomes: "Locuințe întregi", clearFilters: "Șterge",
-    previewData: "Exemplu de previzualizare", previewPeople: "Profil demonstrativ", sourceUnknown: "Sursa nu este disponibilă", observed: "Sursa verificată", askRent: "Chiria nu este afișată", perMonth: "/ lună",
+    previewData: "Locuință exemplu", previewPeople: "Profil demonstrativ", sourceUnknown: "Sursa nu este disponibilă", observed: "Sursa verificată", askRent: "Chiria nu este afișată", perMonth: "/ lună",
     sourceTag: "Sursa anunțului", bills: "Utilități", deposit: "Garanție", unknown: "Necomunicat", availability: "Disponibilitate", availabilityUnknown: "Trebuie confirmată", bedrooms: "Dormitoare", roomsCount: "Camere", size: "Suprafață", fit: "Se potrivește căutării",
     noHomes: "Momentan nu sunt locuințe pentru acest oraș", noHomesText: "Previzualizarea nu are date pentru {place}. Încearcă un oraș cu exemple sau păstrează căutarea pentru anunțuri noi.", tryBerlin: "Explorează locuințele din Berlin", searchElse: "Schimbă destinația", firstSearch: "Caută alt oraș", locationRequired: "Introdu un oraș pentru a începe căutarea.",
     noPeople: "Momentan nu sunt persoane în acest oraș", noPeopleText: "Previzualizarea nu are profiluri pentru {place}. Îți poți configura în continuare preferințele.",
-    tailorTitle: "Mai mult despre tine, un început mai bun", tailorText: "Răspunde la câteva întrebări opționale ca să găsești locuințe și posibili colegi de apartament potriviți planurilor tale.",
-    startQuestions: "Creează-mi profilul", homeDetails: "Detalii despre locuință", personDetails: "Despre", description: "Despre această locuință", costs: "Ce include prețul", fitDetails: "De ce s-ar putea potrivi", notKnown: "Neconfirmat", features: "Dotări", askHost: "Confirmă cu gazda", listingInfo: "Informații despre anunț", openSource: "Deschide sursa originală", hide: "Ascunde", save: "Salvează", savedLabel: "Salvat", viewProfile: "Vezi profilul", connect: "Scrie o introducere",
+    tailorTitle: "Ajustează căutarea", tailorText: "Adaugă ce contează pentru tine.",
+    startQuestions: "Alege preferințele", homeDetails: "Detalii despre locuință", personDetails: "Despre", description: "Despre această locuință", costs: "Ce include prețul", fitDetails: "De ce s-ar putea potrivi", notKnown: "Neconfirmat", features: "Dotări", askHost: "Confirmă cu gazda", listingInfo: "Informații despre anunț", openSource: "Deschide sursa originală", hide: "Ascunde", save: "Salvează", savedLabel: "Salvat", viewProfile: "Vezi profilul", connect: "Scrie o introducere",
     privateRent: "Partea ta de chirie", wholeRent: "Chiria întregii locuințe", moneyNoCurrency: "Alege moneda", costNote: "Utilitățile și garanția apar doar dacă sunt menționate în anunț. Nu presupunem cum se împarte costul.", sampleNote: "Exemplele sunt marcate clar. Detaliile lipsă rămân necunoscute; confirmă disponibilitatea și costurile la sursa originală.",
     rankingTitle: "Alegerile tale îți ordonează rezultatele", rankingText: "Răspunsurile și anunțurile salvate sau ascunse pot schimba ordinea pe acest dispozitiv. O informație lipsă nu înseamnă o incompatibilitate.", rankingChanged: "Ordinea s-a schimbat după ce ai salvat sau ai ascuns un rezultat.", hidePrompt: "De ce vrei să ascunzi anunțul?", hideTooCostly: "Depășește bugetul", hideWrongArea: "Altă zonă", hideWrongSpace: "Alt tip de locuință", hideMissing: "Lipsesc informații", hideOther: "Nu mi se potrivește", hiddenNote: "Ascuns din rezultate pe acest dispozitiv.", undo: "Anulează",
     askIntro: "O primă conversație bună începe cu puțin context.", introDraft: "Ciornă de prezentare", introName: "Numele tău", introMessage: "Mesajul tău", introPlaceholder: "Bună! Caut o locuință liniștită și prietenoasă în această zonă...", introPreview: "Verifică mesajul", keepDraft: "Salvează ciorna aici", draftSaved: "Ciorna a fost salvată pe acest dispozitiv. Nu a fost trimisă.", draftOnly: "Aceasta este o previzualizare. Ciorna rămâne pe dispozitiv și nu contactează pe nimeni.",
@@ -68,29 +77,33 @@ const WORDS = {
     groupNone: "Căutarea comună începe aici", groupNoneText: "Creați o listă, adunați întrebările rămase și planificați împreună o vizionare.",
     savedTitle: "Păstrează aproape opțiunile bune", savedSub: "Locuințele și persoanele salvate rămân aici.", noSaved: "N-ai salvat nimic încă", noSavedText: "Apasă pe inimă la o locuință sau salvează un profil pentru a începe lista.",
     youTitle: "Căutarea ta, în mâinile tale", youSub: "Vezi ce ai notat, schimbă răspunsurile și gestionează previzualizarea.", profileStatus: "Progresul profilului", answered: "cu răspuns", complete: "complet", unanswered: "Nu ai răspuns", skippedStatus: "Sărit deocamdată", changeAnswer: "Schimbă", resume: "Continuă profilul",
-    privacy: "Intimitate și limbă", localOnly: "Datele rămân pe acest dispozitiv în previzualizare.", dataTitle: "Datele tale", dataText: "Descarcă sau șterge răspunsurile, lista salvată și ciornele din acest browser.", export: "Descarcă datele mele", reset: "Șterge previzualizarea", resetConfirm: "Ștergi de pe acest dispozitiv răspunsurile, listele și ciornele salvate?", clearEverything: "Șterge tot", cancel: "Păstrează datele", resetDone: "Datele de pe dispozitiv au fost șterse. Poți începe o căutare nouă.",
+    privacy: "Intimitate și limbă", localOnly: "Datele rămân pe acest dispozitiv în previzualizare.", dataTitle: "Datele tale", dataText: "Descarcă sau șterge răspunsurile, lista salvată și ciornele din acest browser.", export: "Descarcă datele mele", reset: "Șterge previzualizarea", resetConfirm: "Ștergi de pe acest dispozitiv răspunsurile, listele și ciornele salvate?", clearEverything: "Șterge tot", cancel: "Anulează", keepData: "Păstrează datele", resetDone: "Datele de pe dispozitiv au fost șterse. Poți începe o căutare nouă.",
     resultsOrder: "Locuințele sunt ordonate după criteriile alese. Detaliile necomunicate rămân necunoscute.", homePlan: "Planifică o vizionare", noProposal: "Încă nu există contribuții propuse", noEvents: "Încă nu există planuri de vizionare", unknownPersonDetails: "Nu a fost comunicat", savePerson: "Salvează persoana", groupExists: "Ai deja o căutare comună aici.",
     ariaClose: "Închide", priceLabel: "Chirie lunară", messageRequired: "Scrie mai întâi o scurtă prezentare.", placeNotFound: "Alege un oraș ca destinație.", unknownCity: "Putem păstra căutarea chiar dacă previzualizarea nu are anunțuri pentru orașul ales.", demoCity: "Oraș demonstrativ", amountHelp: "Suma este personală și rămâne privată. Ajută doar la ordonarea chiriilor potrivite pentru tine.", maxHelp: "Aceasta este o limită personală. Nu apare în profil și nu este arătată altor persoane.", skipKeepsUnknown: "Dacă sari peste întrebare, detaliul rămâne necunoscut și îl poți completa mai târziu.", chooseOrSkip: "Alege un răspuns sau sari peste întrebare pentru ca informația să rămână necunoscută.", budgetConflict: "Limita ta privată este mai mică decât chiria pe care ai spus că o consideri confortabilă. Ajustează una dintre sume înainte să continui.",
   },
   es: {
-    tagline: "Un hogar que encaja contigo.", searchTitle: "Un hogar que encaja contigo.", searchSub: "Encuentra un lugar que te guste. Conoce a quienes pueden convertirlo en hogar.",
+    tagline: "Un hogar que encaja contigo.", searchTitle: "Primero, encuentra el lugar.", searchSub: "Después, conoce a quienes podrían convertirlo en un hogar.",
     where: "¿Dónde te gustaría vivir?", destination: "Ciudad de destino", cityPlaceholder: "Berlín, Nueva York, Chisináu...", search: "Buscar",
     promiseBrowse: "Empieza por el lugar", promiseBrowseText: "Explora viviendas y personas antes de crear un perfil.", promisePrivate: "A tu ritmo y con privacidad", promisePrivateText: "Añade solo lo que te ayude a encontrar una buena opción.",
     footerLocal: "En esta vista previa, tus decisiones se guardan en este dispositivo.", footerTagline: "Elige un lugar. Encuentra a tu gente. Cread un hogar juntos.",
+    welcomeFootnote: "Empieza por un lugar. Hazlo tuyo.",
     language: "Idioma", back: "Atrás", next: "Continuar", skip: "Omitir por ahora", saveAnswer: "Guardar respuesta",
-    chapterMove: "Encuentra tu lugar", chapterMoney: "Cuadra las cuentas", chapterLife: "La convivencia", chapterMeet: "Conoce a tu gente",
-    stepOf: "Pregunta", optional: "Opcional", backToResults: "Volver a resultados", profileTitle: "Encuentra opciones que encajen contigo", profileSub: "Con unas pocas respuestas podemos acercarte a viviendas y personas compatibles. Omite lo que aún no quieras compartir.",
+    shareApp: "Compartir ejemplo", copyLink: "Copiar enlace", shareLinkHelp: "Abre o copia este enlace para probar el ejemplo. No contiene tus opciones guardadas.", installApp: "Instalar", appInstalled: "Domi está en tu pantalla de inicio.", shareCopied: "Se copió el enlace del ejemplo. No incluye tus opciones guardadas.",
+    installHelpTitle: "Ten Domi a mano", installHelpText: "En Safari, toca Compartir y elige Añadir a pantalla de inicio. La aplicación se queda en tu dispositivo.",
+    demoTitle: "Recorrido de ejemplo · Bucarest", demoText: "Guarda una habitación y abre Guardados para ver tu lista.", demoPeople: "Conoce los perfiles ficticios y compara las rutinas que deciden compartir.", demoSaved: "Tu lista guarda las viviendas y personas que quieres comparar.", demoSavedWithGroup: "Abre una habitación guardada y añádela a la lista compartida.", demoTogether: "Crea una búsqueda compartida y planificad una visita.", demoTogetherStarted: "Elige una habitación guardada para la lista compartida y planificad una visita.", demoSearchNote: "Ejemplo guiado · viviendas y perfiles ficticios", demoReset: "Reiniciar",
+    chapterMove: "Tu búsqueda", chapterMoney: "Alquiler cómodo", chapterLife: "La vida diaria", chapterMeet: "Tu presentación",
+    stepOf: "Pregunta", optional: "Opcional", backToResults: "Volver a resultados", profileTitle: "¿Qué debería guiar tu búsqueda?", profileSub: "Responde lo que ya sabes. Omite lo que aún no tengas claro y cambia tus respuestas más adelante.",
     finishTitle: "Tu búsqueda va tomando forma", finishSub: "Tus respuestas pueden ordenar las viviendas y personas según lo que te importa. Puedes cambiarlas cuando quieras.",
     profileCta: "Personalizar resultados", editProfile: "Editar respuestas", finish: "Ver mis opciones", profilePrivate: "En esta vista previa, tus respuestas se quedan en el dispositivo. Tu límite personal de alquiler nunca se muestra a otras personas.",
     home: "Viviendas", people: "Personas", together: "En grupo", saved: "Guardado", you: "Tú",
-    resultsHomes: "Viviendas en", resultsPeople: "Personas cerca de", homesSub: "Un lugar para empezar a imaginar lo que viene.", peopleSub: "Personas que buscan vivienda por la misma zona.",
+    resultsHomes: "Viviendas en", resultsPeople: "Personas cerca de", peopleSub: "Personas que buscan vivienda por la misma zona.",
     changePlace: "Cambiar ciudad", filters: "Filtros", sort: "Ordenar", allHomes: "Todas", rooms: "Habitaciones", wholeHomes: "Viviendas enteras", clearFilters: "Quitar",
-    previewData: "Ejemplo de vista previa", previewPeople: "Perfil de ejemplo", sourceUnknown: "No hay datos de la fuente", observed: "Fuente consultada", askRent: "Alquiler sin indicar", perMonth: "/ mes",
+    previewData: "Vivienda de ejemplo", previewPeople: "Perfil de ejemplo", sourceUnknown: "No hay datos de la fuente", observed: "Fuente consultada", askRent: "Alquiler sin indicar", perMonth: "/ mes",
     sourceTag: "Fuente del anuncio", bills: "Suministros", deposit: "Fianza", unknown: "Sin información", availability: "Disponibilidad", availabilityUnknown: "Hay que confirmarla", bedrooms: "Dormitorios", roomsCount: "Habitaciones", size: "Superficie", fit: "Encaja con tu búsqueda",
     noHomes: "Aún no hay viviendas para esta ciudad", noHomesText: "Esta vista previa no tiene datos de {place}. Prueba una ciudad con ejemplos o deja preparada tu búsqueda para nuevos anuncios.", tryBerlin: "Explorar viviendas de Berlín", searchElse: "Cambiar destino", firstSearch: "Buscar otra ciudad", locationRequired: "Escribe una ciudad para empezar a buscar.",
     noPeople: "Aún no hay personas en esta ciudad", noPeopleText: "Esta vista previa no tiene perfiles para {place}. Puedes configurar tus preferencias igualmente.",
-    tailorTitle: "Cuéntanos un poco más para empezar mejor", tailorText: "Responde algunas preguntas opcionales para ordenar viviendas y posibles compañeros de piso según tus planes.",
-    startQuestions: "Crear mi perfil", homeDetails: "Detalles de la vivienda", personDetails: "Sobre esta persona", description: "Sobre este lugar", costs: "Qué incluye el precio", fitDetails: "Por qué podría encajar", notKnown: "Sin confirmar", features: "Características", askHost: "Confirma con el anfitrión", listingInfo: "Información del anuncio", openSource: "Abrir fuente original", hide: "Ocultar", save: "Guardar", savedLabel: "Guardado", viewProfile: "Ver perfil", connect: "Preparar una presentación",
+    tailorTitle: "Ajusta tu búsqueda", tailorText: "Añade lo que te importa.",
+    startQuestions: "Elegir preferencias", homeDetails: "Detalles de la vivienda", personDetails: "Sobre esta persona", description: "Sobre este lugar", costs: "Qué incluye el precio", fitDetails: "Por qué podría encajar", notKnown: "Sin confirmar", features: "Características", askHost: "Confirma con el anfitrión", listingInfo: "Información del anuncio", openSource: "Abrir fuente original", hide: "Ocultar", save: "Guardar", savedLabel: "Guardado", viewProfile: "Ver perfil", connect: "Preparar una presentación",
     privateRent: "Tu parte del alquiler", wholeRent: "Alquiler de toda la vivienda", moneyNoCurrency: "Elige moneda", costNote: "Los suministros y la fianza solo aparecen cuando el anuncio los indica. No suponemos cómo se reparte el coste.", sampleNote: "Los ejemplos están identificados. Los datos desconocidos siguen así; confirma disponibilidad y costes en la fuente original.",
     rankingTitle: "Tus elecciones ordenan tus resultados", rankingText: "Tus respuestas, viviendas guardadas y anuncios ocultos pueden cambiar el orden en este dispositivo. Un dato desconocido no cuenta como incompatibilidad.", rankingChanged: "El orden cambió porque guardaste u ocultaste un resultado.", hidePrompt: "¿Por qué ocultas este anuncio?", hideTooCostly: "Supera mi presupuesto", hideWrongArea: "Otra zona", hideWrongSpace: "Otro tipo de vivienda", hideMissing: "Faltan datos", hideOther: "No es para mí", hiddenNote: "Oculto en este dispositivo.", undo: "Deshacer",
     askIntro: "Un buen primer saludo empieza con un poco de contexto.", introDraft: "Borrador de presentación", introName: "Tu nombre", introMessage: "Tu mensaje", introPlaceholder: "¡Hola! Busco un hogar tranquilo y agradable por esta zona...", introPreview: "Revisar presentación", keepDraft: "Guardar borrador aquí", draftSaved: "Borrador guardado en este dispositivo. No se envió.", draftOnly: "Esta es una vista previa. El borrador se queda en este dispositivo y no contacta con nadie.",
@@ -103,7 +116,7 @@ const WORDS = {
     groupNone: "Tu búsqueda compartida empieza aquí", groupNoneText: "Cread una lista, reunid las preguntas pendientes y planificad juntos una visita.",
     savedTitle: "Ten a mano las opciones que te gustan", savedSub: "Aquí se guardan las viviendas y personas que te interesan.", noSaved: "Todavía no has guardado nada", noSavedText: "Pulsa el corazón de una vivienda o guarda un perfil para crear tu lista.",
     youTitle: "Tú decides sobre tu búsqueda", youSub: "Revisa tus notas, cambia tus respuestas y gestiona esta vista previa.", profileStatus: "Progreso del perfil", answered: "respondidas", complete: "completo", unanswered: "Sin responder", skippedStatus: "Omitida por ahora", changeAnswer: "Cambiar", resume: "Continuar perfil",
-    privacy: "Privacidad e idioma", localOnly: "En esta vista previa, los datos se quedan en este dispositivo.", dataTitle: "Tus datos", dataText: "Descarga o borra las respuestas, la lista guardada y los borradores de este navegador.", export: "Descargar mis datos", reset: "Borrar esta vista previa", resetConfirm: "¿Quieres borrar de este dispositivo las respuestas, listas y borradores guardados?", clearEverything: "Borrar todo", cancel: "Conservar mis datos", resetDone: "Se han borrado los datos de este dispositivo. Puedes empezar otra búsqueda.",
+    privacy: "Privacidad e idioma", localOnly: "En esta vista previa, los datos se quedan en este dispositivo.", dataTitle: "Tus datos", dataText: "Descarga o borra las respuestas, la lista guardada y los borradores de este navegador.", export: "Descargar mis datos", reset: "Borrar esta vista previa", resetConfirm: "¿Quieres borrar de este dispositivo las respuestas, listas y borradores guardados?", clearEverything: "Borrar todo", cancel: "Cancelar", keepData: "Conservar mis datos", resetDone: "Se han borrado los datos de este dispositivo. Puedes empezar otra búsqueda.",
     resultsOrder: "Las viviendas se ordenan con los datos que elegiste. Lo que el anuncio no informa sigue siendo desconocido.", homePlan: "Planificar una visita", noProposal: "Aún no hay aportes propuestos", noEvents: "Aún no hay planes de visita", unknownPersonDetails: "Sin compartir", savePerson: "Guardar persona", groupExists: "Ya tienes una búsqueda compartida aquí.",
     ariaClose: "Cerrar", priceLabel: "Alquiler mensual", messageRequired: "Escribe primero una breve presentación.", placeNotFound: "Elige una ciudad de destino.", unknownCity: "Podemos dejar preparada tu búsqueda aunque no haya anuncios en la vista previa.", demoCity: "Ciudad de ejemplo", amountHelp: "Esta cantidad es personal y privada. Solo ayuda a ordenar los alquileres que te pueden resultar cómodos.", maxHelp: "Este es tu límite personal. No aparece en tu perfil ni se muestra a otras personas.", skipKeepsUnknown: "Si omites esta pregunta, el dato queda desconocido. Puedes completarlo más adelante.", chooseOrSkip: "Elige una respuesta u omite la pregunta para dejar este dato sin definir.", budgetConflict: "Tu límite privado es inferior al alquiler que dijiste que te resulta cómodo. Ajusta uno de los importes para continuar.",
   },
@@ -141,6 +154,7 @@ const iconPaths = {
   shield: '<path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/>',
   external: '<path d="M14 3h7v7m0-7-9 9"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
   copy: '<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>',
+  share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4m-6.6 7 6.6 4.1"/>',
   message: '<path d="M21 11.5a8.5 8.5 0 0 1-12.8 7.4L3 21l2.1-5.2A8.5 8.5 0 1 1 21 11.5Z"/>',
   bed: '<path d="M2 4v17m20-7v7M2 17h20M6 8h5a3 3 0 0 1 3 3v3H6Z"/><path d="M14 11h4a4 4 0 0 1 4 4v2"/>',
   building: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 21v-4h6v4M8 7h.01M12 7h.01M16 7h.01M8 11h.01M12 11h.01M16 11h.01"/>',
@@ -284,36 +298,42 @@ function readSavedState() {
   }
 }
 
-const savedState = readSavedState();
+const savedState = DEMO_MODE ? null : readSavedState();
+
+function demoAnswers() {
+  return {};
+}
+
 const state = {
-  locale: APP_LANGUAGES.includes(savedState?.locale) ? savedState.locale : initialLocale(),
-  view: ["welcome", "questionnaire", "results", "detail-home", "detail-person", "together", "saved", "you"].includes(savedState?.view) ? savedState.view : "welcome",
-  tab: ["homes", "people", "together", "saved", "you"].includes(savedState?.tab) ? savedState.tab : "homes",
-  place: typeof savedState?.place === "string" ? savedState.place : "",
-  answers: savedState?.answers && typeof savedState.answers === "object" ? savedState.answers : {},
-  skipped: Array.isArray(savedState?.skipped) ? savedState.skipped : [],
-  step: Number.isInteger(savedState?.step) ? Math.max(0, Math.min(STEPS.length - 1, savedState.step)) : 0,
-  savedHomes: Array.isArray(savedState?.savedHomes) ? savedState.savedHomes : [],
-  savedPeople: Array.isArray(savedState?.savedPeople) ? savedState.savedPeople : [],
-  hiddenHomes: savedState?.hiddenHomes && typeof savedState.hiddenHomes === "object" ? savedState.hiddenHomes : {},
-  hiddenPeople: savedState?.hiddenPeople && typeof savedState.hiddenPeople === "object" ? savedState.hiddenPeople : {},
-  signals: Array.isArray(savedState?.signals) ? savedState.signals : [],
+  locale: !DEMO_MODE && APP_LANGUAGES.includes(savedState?.locale) ? savedState.locale : DEMO_MODE ? "en" : initialLocale(),
+  view: DEMO_MODE ? "welcome" : ["welcome", "questionnaire", "results", "detail-home", "detail-person", "together", "saved", "you"].includes(savedState?.view) ? savedState.view : "welcome",
+  tab: DEMO_MODE ? "homes" : ["homes", "people", "together", "saved", "you"].includes(savedState?.tab) ? savedState.tab : "homes",
+  place: DEMO_MODE ? "Bucharest" : typeof savedState?.place === "string" ? savedState.place : "",
+  answers: DEMO_MODE ? demoAnswers() : savedState?.answers && typeof savedState.answers === "object" ? savedState.answers : {},
+  skipped: DEMO_MODE ? [] : Array.isArray(savedState?.skipped) ? savedState.skipped : [],
+  step: DEMO_MODE ? 0 : Number.isInteger(savedState?.step) ? Math.max(0, Math.min(STEPS.length - 1, savedState.step)) : 0,
+  savedHomes: DEMO_MODE ? [] : Array.isArray(savedState?.savedHomes) ? savedState.savedHomes : [],
+  savedPeople: DEMO_MODE ? [] : Array.isArray(savedState?.savedPeople) ? savedState.savedPeople : [],
+  hiddenHomes: DEMO_MODE ? {} : savedState?.hiddenHomes && typeof savedState.hiddenHomes === "object" ? savedState.hiddenHomes : {},
+  hiddenPeople: DEMO_MODE ? {} : savedState?.hiddenPeople && typeof savedState.hiddenPeople === "object" ? savedState.hiddenPeople : {},
+  signals: DEMO_MODE ? [] : Array.isArray(savedState?.signals) ? savedState.signals : [],
   activeHome: null,
   activePerson: null,
-  filterType: "all",
+  filterType: DEMO_MODE ? "room" : "all",
   expandedHomes: false,
   expandedPeople: false,
-  group: savedState?.group ?? null,
-  inviteDraft: savedState?.inviteDraft ?? null,
-  introDrafts: Array.isArray(savedState?.introDrafts) ? savedState.introDrafts : [],
-  roomProposals: Array.isArray(savedState?.roomProposals) ? savedState.roomProposals : [],
-  viewingPlans: Array.isArray(savedState?.viewingPlans) ? savedState.viewingPlans : [],
+  group: DEMO_MODE ? null : savedState?.group ?? null,
+  inviteDraft: DEMO_MODE ? null : savedState?.inviteDraft ?? null,
+  introDrafts: DEMO_MODE ? [] : Array.isArray(savedState?.introDrafts) ? savedState.introDrafts : [],
+  roomProposals: DEMO_MODE ? [] : Array.isArray(savedState?.roomProposals) ? savedState.roomProposals : [],
+  viewingPlans: DEMO_MODE ? [] : Array.isArray(savedState?.viewingPlans) ? savedState.viewingPlans : [],
   modal: null,
   toastTimer: null,
   error: "",
 };
 
 function persist() {
+  if (DEMO_MODE) return;
   const saved = {
     locale: state.locale, view: state.view, tab: state.tab, place: state.place,
     answers: state.answers, skipped: state.skipped, step: state.step,
@@ -380,12 +400,15 @@ async function loadProductData() {
 
 const app = document.querySelector("#app");
 const toastElement = document.querySelector("#toast");
+let deferredInstallPrompt = null;
+let appInstalled = Boolean(navigator.standalone) || Boolean(window.matchMedia?.("(display-mode: standalone)").matches);
+const iosDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const mascots = {
-  welcome: "/brand/mascot-waving.png", search: "/brand/mascot-search-glow-platform.png",
-  move: "/brand/mascot-house-in-hand-glow.png", money: "/brand/mascot-gentle-shrug.png",
-  life: "/brand/mascot-open-arms.png", meet: "/brand/mascot-roommate-group-glow.png",
-  calendar: "/brand/mascot-calendar-dates.png", help: "/brand/mascot-reassuring-hand-on-chest.png",
-  home: "/brand/mascot-home-celebration-glow.png", searchGlow: "/brand/mascot-search-glow.png",
+  welcome: "/brand/mascot-waving.png", search: "/brand/mascot-waving.png",
+  move: "/brand/mascot-waving.png", money: "/brand/mascot-waving.png",
+  life: "/brand/mascot-waving.png", meet: "/brand/mascot-waving.png",
+  calendar: "/brand/mascot-waving.png", help: "/brand/mascot-waving.png",
+  home: "/brand/mascot-waving.png", searchGlow: "/brand/mascot-waving.png",
 };
 
 function escapeHtml(value) {
@@ -550,6 +573,7 @@ function searchRentBasis() {
 function sortVisibleHomes(place) {
   let rows = homes.filter((home) => homeCityMatch(home, place));
   if (state.filterType !== "all") rows = rows.filter((home) => home.rentBasis === state.filterType);
+  if (DEMO_MODE) rows = rows.filter((home) => home.isExample && home.rentBasis === "room");
   rows = rows.filter((home) => !state.hiddenHomes[home.id]);
   const answers = state.answers;
   const minimumBedrooms = answers.space;
@@ -589,7 +613,7 @@ function scoreHome(home, comfortable, preferredCurrency, budgetBasis) {
 }
 
 function sortVisiblePeople(place) {
-  const rows = people.filter((person) => personCityMatch(person, place) && !state.hiddenPeople[person.id]);
+  const rows = people.filter((person) => personCityMatch(person, place) && (!DEMO_MODE || person.isExample) && !state.hiddenPeople[person.id]);
   return rows.sort((a, b) => scorePerson(b) - scorePerson(a));
 }
 
@@ -629,9 +653,21 @@ function citySuggestions() {
 }
 
 function languagePicker() {
-  const options = [["en", "English"], ["ro", "Română"], ["es", "Español"]]
+  const options = [["en", "EN"], ["ro", "RO"], ["es", "ES"]]
     .map(([code, name]) => `<option value="${code}" ${state.locale === code ? "selected" : ""}>${name}</option>`).join("");
-  return `<label class="language-wrap"><span class="sr-only">${escapeHtml(tr("language"))}</span><span class="language-globe">${icon("globe", 17)}</span><select class="language-select" data-action="language" aria-label="${escapeAttr(tr("language"))}">${options}</select></label>`;
+  return `<label class="language-wrap"><span class="sr-only">${escapeHtml(tr("language"))}</span><select class="language-select" data-action="language" aria-label="${escapeAttr(tr("language"))}">${options}</select></label>`;
+}
+
+function headerActions() {
+  if (state.view === "welcome") {
+    return `<div class="topbar-actions">${languagePicker()}</div>`;
+  }
+  const installVisible = !appInstalled && (deferredInstallPrompt || iosDevice);
+  return `<div class="topbar-actions">
+    <button class="icon-button share-app-button" type="button" data-action="share-app" aria-label="${escapeAttr(tr("shareApp"))}" title="${escapeAttr(tr("shareApp"))}">${icon("share", 19)}<span>${escapeHtml(tr("shareApp"))}</span></button>
+    <button class="icon-button install-app-button" type="button" data-action="install-app" aria-label="${escapeAttr(tr("installApp"))}" title="${escapeAttr(tr("installApp"))}" ${installVisible ? "" : "hidden"}>${icon("home", 19)}<span>${escapeHtml(tr("installApp"))}</span></button>
+    ${languagePicker()}
+  </div>`;
 }
 
 function brandHeader() {
@@ -639,22 +675,22 @@ function brandHeader() {
   if (progress) {
     const steps = visibleSteps();
     const current = Math.min(state.step, steps.length - 1);
-    const percentage = Math.round(((current + 1) / steps.length) * 100);
+    const progressLabel = STRINGS(`Question ${current + 1} of ${steps.length}`, `Întrebarea ${current + 1} din ${steps.length}`, `Pregunta ${current + 1} de ${steps.length}`)[state.locale];
     return `<header class="topbar journey-topbar">
       <button class="icon-button" type="button" data-action="step-back" aria-label="${escapeAttr(tr("back"))}">${icon("back", 22)}</button>
       <button class="journey-exit quiet-link" type="button" data-action="leave-profile">${escapeHtml(tr("backToResults"))}</button>
       <div class="top-progress" role="progressbar" aria-label="${escapeAttr(tr("stepOf"))}" aria-valuemin="1" aria-valuemax="${steps.length}" aria-valuenow="${current + 1}">
         <div class="segment-track">${steps.map((_, index) => `<span class="progress-segment ${index <= current ? "done" : ""}"></span>`).join("")}</div>
-        <div class="progress-copy"><span>${escapeHtml(tr("stepOf"))} ${current + 1} / ${steps.length}</span><span>${percentage}%</span></div>
+        <div class="progress-copy"><span>${escapeHtml(progressLabel)}</span></div>
       </div>
       ${languagePicker()}
     </header>`;
   }
   const showPlace = !["welcome", "questionnaire"].includes(state.view) && state.place;
-  return `<header class="topbar">
+  return `<header class="topbar${showPlace ? " topbar-with-place" : ""}">
     <a class="brand-home" href="/" data-action="brand-home" aria-label="Domi home"><img class="brand-symbol" src="/brand/logo.png" alt=""><img class="brand-wordmark" src="/brand/wordmark.png" alt="Domi"></a>
     ${showPlace ? `<button type="button" class="place-pill" data-action="change-place">${icon("pin", 16)}<span>${escapeHtml(state.place)}</span>${icon("pencil", 14)}</button>` : ""}
-    ${languagePicker()}
+    ${headerActions()}
   </header>`;
 }
 
@@ -666,12 +702,13 @@ function welcomeScreen() {
   const options = citySuggestions().slice(0, 80).map((place) => `<option value="${escapeAttr(place)}"></option>`).join("");
   return `<main class="landing" id="main-content">
     <section class="hero-card" aria-labelledby="welcome-title">
+      <div class="hero-mascot-wrap" aria-hidden="true"><img class="hero-mascot" src="${mascots.welcome}" alt=""></div>
       <div class="hero-copy">
         <h1 class="hero-title" id="welcome-title">${escapeHtml(tr("searchTitle"))}</h1>
-        <p class="hero-subtitle">${escapeHtml(tr("where"))}</p>
+        <p class="hero-subtitle">${escapeHtml(tr("searchSub"))}</p>
       </div>
-      <div class="hero-mascot-wrap" aria-hidden="true"><span class="hero-orbit one"></span><span class="hero-orbit two"></span><img class="hero-mascot" src="${mascots.welcome}" alt=""></div>
     </section>
+    ${DEMO_MODE ? `<p class="demo-search-note">${escapeHtml(tr("demoSearchNote"))}</p>` : ""}
     <form class="search-card" id="search-form" novalidate>
       <div class="search-field-group">
         <label class="field-label" for="destination-input">${escapeHtml(tr("destination"))}</label>
@@ -680,9 +717,13 @@ function welcomeScreen() {
       <button class="primary-button search-button" type="submit">${escapeHtml(tr("search"))}${icon("arrow", 19)}</button>
       ${state.error ? `<p class="inline-error search-error" id="search-error" role="alert">${escapeHtml(state.error)}</p>` : `<span class="sr-only" id="search-error"></span>`}
     </form>
-    ${footerLandscape()}
-    <p class="landing-footer"><span>${escapeHtml(tr("footerLocal"))}</span><span aria-hidden="true">·</span><span>${escapeHtml(tr("promiseBrowseText"))}</span></p>
+    <p class="landing-footer">${escapeHtml(tr("welcomeFootnote"))}</p>
   </main>`;
+}
+
+function demoCue() {
+  if (!DEMO_MODE) return "";
+  return `<aside class="demo-cue"><span class="demo-cue-dot" aria-hidden="true"></span><strong class="demo-cue-label">${escapeHtml(tr("demoTitle"))}</strong><button class="demo-reset" type="button" data-action="reset-demo">${escapeHtml(tr("demoReset"))}</button></aside>`;
 }
 
 function chapterTitle(step) {
@@ -792,7 +833,6 @@ function questionScreen() {
   const step = currentStep();
   const [prompt, description] = questionCopy(step);
   const mascot = step.chapter === 0 ? mascots.move : step.chapter === 1 ? mascots.money : step.chapter === 2 ? mascots.life : mascots.meet;
-  const progress = Math.round(((state.step + 1) / steps.length) * 100);
   return `<main class="journey-shell" id="main-content">
     <div class="journey-heading">
       <p class="journey-kicker">${escapeHtml(chapterTitle(step))} <span class="optional-label">· ${escapeHtml(tr("optional"))}</span></p>
@@ -814,7 +854,10 @@ function questionScreen() {
 }
 
 function knownPhoto(item) {
-  if (item.isExample && item.imageIsIllustration) return "/assets/home-example.png";
+  if (item.isExample && item.imageIsIllustration) {
+    const sampleIndex = Number(String(item.id).match(/-(\d+)$/)?.[1]);
+    return ["/assets/cozy-room.png", "/assets/cozy-kitchen.png", "/assets/cozy-park-room.png"][sampleIndex] ?? "/assets/cozy-room.png";
+  }
   const value = item.image || (Array.isArray(item.images) ? item.images[0] : "");
   if (!value) return "";
   try {
@@ -914,22 +957,15 @@ function homeRowsForCurrentTab() {
 }
 
 function previewBanner(rows = [], kind = "home") {
+  if (DEMO_MODE) return "";
   let note;
   if (kind === "people") {
-    const previewCount = rows.filter((item) => item.isExample).length;
-    note = STRINGS(
-      `${previewCount} fictional preview profiles. No live people are shown.`,
-      `${previewCount} profiluri fictive pentru previzualizare. Nu sunt afișate persoane reale.`,
-      `${previewCount} perfiles ficticios de vista previa. No se muestran personas reales.`,
-    )[state.locale];
+    note = STRINGS("People here are fictional examples. Live profiles need a connected service.", "Persoanele de aici sunt exemple fictive. Profilurile reale apar după conectarea serviciului.", "Los perfiles son ejemplos ficticios. Los perfiles reales requieren conectar el servicio.")[state.locale];
   } else if (kind === "home") {
-    const cityRows = homes.filter((home) => homeCityMatch(home, state.place));
-    const sourceCount = cityRows.filter((home) => !home.isExample).length;
-    const previewCount = cityRows.filter((home) => home.isExample).length;
     note = STRINGS(
-      `${sourceCount} source listings for this city. Availability needs confirmation.${previewCount ? ` ${previewCount} fictional examples are labelled.` : ""}`,
-      `${sourceCount} anunțuri din surse pentru acest oraș. Disponibilitatea trebuie confirmată.${previewCount ? ` ${previewCount} exemple fictive sunt marcate.` : ""}`,
-      `${sourceCount} anuncios de fuentes para esta ciudad. Hay que confirmar la disponibilidad.${previewCount ? ` ${previewCount} ejemplos ficticios están identificados.` : ""}`,
+      "Homes come from public sources. Check availability and costs with the original listing.",
+      "Locuințele provin din surse publice. Verifică disponibilitatea și costurile în anunțul original.",
+      "Las viviendas proceden de fuentes públicas. Confirma disponibilidad y costes en el anuncio original.",
     )[state.locale];
   } else {
     note = tr("draftOnly");
@@ -952,19 +988,21 @@ function resultsScreen() {
   const peopleTab = tab === "people";
   const rows = homesTab ? homeRowsForCurrentTab() : sortVisiblePeople(state.place);
   const title = `${tr(homesTab ? "resultsHomes" : "resultsPeople")} ${state.place}`;
-  const subtitle = tr(homesTab ? "homesSub" : "peopleSub");
+  const subtitle = homesTab ? "" : tr("peopleSub");
   const emptyState = homesTab ? noHomesState() : noPeopleState();
   const visibleRows = (homesTab ? state.expandedHomes : state.expandedPeople) ? rows : rows.slice(0, 12);
-  const nudge = `<div class="soft-cta results-nudge"><div class="soft-cta-copy"><strong>${escapeHtml(tr("tailorTitle"))}</strong><span>${escapeHtml(tr("tailorText"))}</span></div><button type="button" class="primary-button" data-action="start-profile">${escapeHtml(tr("startQuestions"))}${icon("arrow", 17)}</button></div>`;
+  const nudge = `<div class="soft-cta ${DEMO_MODE ? "demo-refinement" : "results-nudge"}"><div class="soft-cta-copy"><strong>${escapeHtml(tr("tailorTitle"))}</strong><span>${escapeHtml(tr("tailorText"))}</span></div><button type="button" class="primary-button" data-action="start-profile">${escapeHtml(tr("startQuestions"))}${icon("arrow", 17)}</button></div>`;
+  const cards = visibleRows.map((item, index) => `${homesTab ? homeCard(item, index) : personCard(item)}${DEMO_MODE && index === 0 ? nudge : ""}`).join("");
   const loadMore = rows.length > visibleRows.length
     ? `<button type="button" class="results-more" data-action="load-more">${escapeHtml(STRINGS(`Show ${rows.length - visibleRows.length} more`, `Arată încă ${rows.length - visibleRows.length}`, `Mostrar ${rows.length - visibleRows.length} más`)[state.locale])}${icon("arrow", 16)}</button>`
     : "";
-  return `<main class="results-shell" id="main-content">
-    <div class="results-head"><div><p class="eyebrow">${escapeHtml(homesTab ? tr("home") : tr("people"))}</p><h1 class="results-title">${escapeHtml(title)}</h1><p class="results-subtitle">${escapeHtml(subtitle)}</p></div><div class="results-head-actions"><button class="pill-button" type="button" data-action="change-place">${icon("pin", 15)}${escapeHtml(tr("changePlace"))}</button></div></div>
-    ${homesTab ? browseFilters() : ""}
+  return `<main class="results-shell ${DEMO_MODE ? "demo-results" : ""}" id="main-content">
+    ${demoCue()}
+    <div class="results-head"><div><p class="eyebrow">${escapeHtml(homesTab ? tr("home") : tr("people"))}</p><h1 class="results-title">${escapeHtml(title)}</h1>${subtitle ? `<p class="results-subtitle">${escapeHtml(subtitle)}</p>` : ""}</div><div class="results-head-actions"><button class="pill-button" type="button" data-action="change-place">${icon("pin", 15)}${escapeHtml(tr("changePlace"))}</button></div></div>
+    ${homesTab && !DEMO_MODE ? browseFilters() : ""}
     ${previewBanner(rows, homesTab ? "home" : "people")}
-    ${nudge}
-    <section class="${peopleTab ? "people-grid" : "listing-grid"}" aria-label="${escapeAttr(title)}">${rows.length ? visibleRows.map((item, index) => homesTab ? homeCard(item, index) : personCard(item)).join("") : emptyState}</section>
+    ${DEMO_MODE ? "" : nudge}
+    <section class="${peopleTab ? "people-grid" : "listing-grid"}" aria-label="${escapeAttr(title)}">${rows.length ? `${cards}${DEMO_MODE && !visibleRows.length ? nudge : ""}` : `${emptyState}${DEMO_MODE ? nudge : ""}`}</section>
     ${loadMore}
     ${homesTab ? `<div class="sort-note">${icon("sparkle", 15)}<span>${escapeHtml(tr("resultsOrder"))}</span></div>` : ""}
   </main>`;
@@ -1145,9 +1183,10 @@ function planCards() {
 
 function togetherScreen() {
   if (!state.group) {
-    return `<main class="results-shell together-shell" id="main-content">${topSection(tr("togetherTitle"), tr("togetherSub"), tr("together"))}<div class="group-empty"><img src="${mascots.roommates}" alt=""><h2>${escapeHtml(tr("groupNone"))}</h2><p>${escapeHtml(tr("groupNoneText"))}</p><button class="primary-button" type="button" data-action="open-create-group">${escapeHtml(tr("createTogether"))}${icon("arrow", 18)}</button></div>${previewBanner()}</main>`;
+    return `<main class="results-shell together-shell" id="main-content">${demoCue()}${topSection(tr("togetherTitle"), tr("togetherSub"), tr("together"))}<div class="group-empty"><img src="${mascots.roommates}" alt=""><h2>${escapeHtml(tr("groupNone"))}</h2><p>${escapeHtml(tr("groupNoneText"))}</p><button class="primary-button" type="button" data-action="open-create-group">${escapeHtml(tr("createTogether"))}${icon("arrow", 18)}</button></div>${previewBanner()}</main>`;
   }
   return `<main class="results-shell together-shell" id="main-content">
+    ${demoCue()}
     ${topSection(state.group.name || tr("togetherTitle"), tr("togetherSub"), tr("together"))}
     <section class="group-panel"><div class="group-panel-head"><div><h2>${escapeHtml(tr("members"))}</h2><p>${escapeHtml(tr("inviteWarning"))}</p></div><button class="pill-button" type="button" data-action="show-invite">${icon("plus", 15)}${escapeHtml(tr("previewInvite"))}</button></div><div class="member-list">${memberRows()}</div><div class="invite-warning">${icon("info", 15)}${escapeHtml(tr("invitePending"))}</div></section>
     <section class="group-panel"><div class="group-panel-head"><div><h2>${escapeHtml(tr("sharedShortlist"))}</h2><p>${escapeHtml(STRINGS("A place to compare possibilities together.", "Un loc unde puteți compara opțiunile împreună.", "Un lugar para comparar opciones juntos.")[state.locale])}</p></div><button class="quiet-link" type="button" data-action="go-tab" data-tab="saved">${icon("arrow", 18)}<span class="sr-only">${escapeHtml(tr("saved"))}</span></button></div>${groupShortlist()}</section>
@@ -1160,7 +1199,7 @@ function savedScreen() {
   const savedHomes = state.savedHomes.map((id) => homes.find((home) => home.id === id)).filter(Boolean).filter((home) => !state.hiddenHomes[home.id]);
   const savedPeople = state.savedPeople.map((id) => people.find((person) => person.id === id)).filter(Boolean).filter((person) => !state.hiddenPeople[person.id]);
   const any = savedHomes.length + savedPeople.length > 0;
-  return `<main class="results-shell saved-shell" id="main-content">${topSection(tr("savedTitle"), tr("savedSub"), tr("saved"))}
+  return `<main class="results-shell saved-shell" id="main-content">${demoCue()}${topSection(tr("savedTitle"), tr("savedSub"), tr("saved"))}
     ${any ? `${savedHomes.length ? `<h2 class="subsection-title">${escapeHtml(tr("home"))}</h2><section class="saved-grid">${savedHomes.map(homeCard).join("")}</section>` : ""}${savedPeople.length ? `<h2 class="subsection-title">${escapeHtml(tr("people"))}</h2><section class="people-grid">${savedPeople.map(personCard).join("")}</section>` : ""}` : `<div class="group-empty saved-empty"><img src="${mascots.search}" alt=""><h2>${escapeHtml(tr("noSaved"))}</h2><p>${escapeHtml(tr("noSavedText"))}</p><button class="primary-button" type="button" data-action="go-tab" data-tab="homes">${escapeHtml(tr("home"))}${icon("arrow", 18)}</button></div>`}
   </main>`;
 }
@@ -1178,7 +1217,7 @@ function youScreen() {
   const done = tallyAnswered();
   const steps = visibleSteps();
   const percentage = profileProgress();
-  return `<main class="results-shell you-shell" id="main-content">${topSection(tr("youTitle"), tr("youSub"), tr("you"))}
+  return `<main class="results-shell you-shell" id="main-content">${demoCue()}${topSection(tr("youTitle"), tr("youSub"), tr("you"))}
     <div class="you-layout"><div class="you-primary">
       <section class="profile-progress-card"><div class="profile-hello"><img src="${mascots.help}" alt=""><div><h2>${escapeHtml(tr("profileStatus"))}</h2><p>${escapeHtml(`${done} / ${steps.length} ${tr("answered")}`)}</p></div></div><progress class="profile-meter" value="${percentage}" max="100" aria-label="${escapeAttr(tr("profileStatus"))}">${percentage}%</progress><div class="profile-meter-copy"><span>${percentage}% ${escapeHtml(tr("complete"))}</span><button class="quiet-link" type="button" data-action="start-profile">${escapeHtml(tr("resume"))}${icon("arrow", 16)}</button></div></section>
       <section class="profile-card"><div class="profile-list-head"><h2>${escapeHtml(tr("editProfile"))}</h2><span>${escapeHtml(tr("profilePrivate"))}</span></div>${profileRows()}</section>
@@ -1232,7 +1271,7 @@ function modalHead(title, subtitle = "") {
 }
 
 function homeSelectOptions(selected = "") {
-  return homes.filter((home) => homeCityMatch(home, state.place)).map((home) => `<option value="${escapeAttr(home.id)}" ${selected === home.id ? "selected" : ""}>${escapeHtml(`${home.title} · ${home.city} · ${homePrice(home)}`)}</option>`).join("");
+  return homes.filter((home) => homeCityMatch(home, state.place) && (!DEMO_MODE || (home.isExample && home.rentBasis === "room"))).map((home) => `<option value="${escapeAttr(home.id)}" ${selected === home.id ? "selected" : ""}>${escapeHtml(`${home.title} · ${home.city} · ${homePrice(home)}`)}</option>`).join("");
 }
 
 function invitePreviewText(invite) {
@@ -1247,7 +1286,15 @@ function renderModal() {
   const modal = state.modal;
   if (!modal || modal.type === "hide-menu") return "";
   let title = "", subtitle = "", body = "", actions = "";
-  if (modal.type === "change-place") {
+  if (modal.type === "share-link") {
+    title = tr("shareApp");
+    subtitle = tr("shareLinkHelp");
+    body = `<div class="modal-body"><label class="small-field-label" for="share-link-value">${escapeHtml(tr("shareApp"))}</label><input class="text-field" id="share-link-value" readonly value="${escapeAttr(modal.url)}"><div class="modal-actions"><button class="secondary-button" type="button" data-action="close-modal">${escapeHtml(tr("cancel"))}</button><button class="primary-button" type="button" data-action="copy-demo-link">${icon("copy", 16)}${escapeHtml(tr("copyLink"))}</button></div></div>`;
+  } else if (modal.type === "install-help") {
+    title = tr("installHelpTitle");
+    subtitle = tr("installHelpText");
+    body = `<div class="modal-actions"><button class="primary-button" type="button" data-action="close-modal">${escapeHtml(tr("cancel"))}</button></div>`;
+  } else if (modal.type === "change-place") {
     title = tr("changePlace");
     subtitle = tr("unknownCity");
     body = `<form id="change-place-form" class="modal-body"><label class="small-field-label" for="modal-place">${escapeHtml(tr("destination"))}</label><input class="text-field" id="modal-place" name="place" list="modal-city-options" value="${escapeAttr(state.place)}" required autocomplete="address-level2"><datalist id="modal-city-options">${citySuggestions().map((place) => `<option value="${escapeAttr(place)}"></option>`).join("")}</datalist><div class="modal-actions"><button class="secondary-button" type="button" data-action="close-modal">${escapeHtml(tr("cancel"))}</button><button class="primary-button" type="submit">${escapeHtml(tr("search"))}${icon("arrow", 16)}</button></div></form>`;
@@ -1290,7 +1337,7 @@ function renderModal() {
   } else if (modal.type === "confirm-reset") {
     title = tr("reset");
     subtitle = tr("resetConfirm");
-    body = `<div class="modal-actions"><button class="secondary-button" type="button" data-action="close-modal">${escapeHtml(tr("cancel"))}</button><button class="danger-button" type="button" data-action="reset-data">${escapeHtml(tr("clearEverything"))}</button></div>`;
+    body = `<div class="modal-actions"><button class="secondary-button" type="button" data-action="close-modal">${escapeHtml(tr("keepData"))}</button><button class="danger-button" type="button" data-action="reset-data">${escapeHtml(tr("clearEverything"))}</button></div>`;
   }
   if (!title) return "";
   return `<div class="modal-scrim" data-action="close-on-scrim"><section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">${modalHead(title, subtitle).replace("<h2>", "<h2 id=\"modal-title\">")}${body}</section></div>`;
@@ -1334,7 +1381,7 @@ function startSearch(place) {
     state.skipped = state.skipped.filter((step) => step !== "areas");
   }
   state.error = "";
-  state.filterType = "all";
+  state.filterType = DEMO_MODE ? "room" : "all";
   state.expandedHomes = false;
   state.expandedPeople = false;
   state.tab = ["people", "offer"].includes(state.answers.goal) ? "people" : "homes";
@@ -1474,6 +1521,10 @@ function changeGoal(goal) {
 }
 
 function clearPreviewData() {
+  if (DEMO_MODE) {
+    resetDemo();
+    return;
+  }
   try { localStorage.removeItem(STORAGE_KEY); } catch { /* State can still be cleared for this session. */ }
   state.view = "welcome";
   state.tab = "homes";
@@ -1496,6 +1547,90 @@ function clearPreviewData() {
   persist();
   renderApp({ scroll: true });
   showToast(tr("resetDone"));
+}
+
+function resetDemo() {
+  if (!DEMO_MODE) return;
+  state.view = "welcome";
+  state.tab = "homes";
+  state.place = "Bucharest";
+  state.answers = demoAnswers();
+  state.skipped = [];
+  state.step = 0;
+  state.savedHomes = [];
+  state.savedPeople = [];
+  state.hiddenHomes = {};
+  state.hiddenPeople = {};
+  state.signals = [];
+  state.group = null;
+  state.inviteDraft = null;
+  state.introDrafts = [];
+  state.roomProposals = [];
+  state.viewingPlans = [];
+  state.filterType = "room";
+  state.expandedHomes = false;
+  state.expandedPeople = false;
+  state.modal = null;
+  state.error = "";
+  renderApp({ scroll: true });
+}
+
+function demoShareUrl() {
+  const url = new URL("./", window.location.href);
+  url.searchParams.set("demo", "1");
+  return url.href;
+}
+
+async function copyText(text) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  const field = document.createElement("textarea");
+  field.value = text;
+  field.setAttribute("readonly", "");
+  field.style.position = "fixed";
+  field.style.opacity = "0";
+  document.body.append(field);
+  field.select();
+  const copied = document.execCommand("copy");
+  field.remove();
+  if (!copied) throw new Error("Clipboard copy is unavailable.");
+}
+
+async function shareDemo() {
+  const url = demoShareUrl();
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: "DOMI", text: tr("demoTitle"), url });
+      return;
+    } catch (error) {
+      if (error?.name === "AbortError") return;
+    }
+  }
+  try {
+    await copyText(url);
+    showToast(tr("shareCopied"));
+  } catch {
+    state.modal = { type: "share-link", url };
+    renderApp();
+  }
+}
+
+async function installApp() {
+  if (!deferredInstallPrompt) {
+    if (iosDevice) {
+      state.modal = { type: "install-help" };
+      renderApp();
+    }
+    return;
+  }
+  const prompt = deferredInstallPrompt;
+  deferredInstallPrompt = null;
+  renderApp();
+  await prompt.prompt();
+  const choice = await prompt.userChoice;
+  if (choice?.outcome === "accepted") showToast(tr("appInstalled"));
 }
 
 function exportData() {
@@ -1573,7 +1708,12 @@ app.addEventListener("click", (event) => {
   const type = control.dataset.type;
   const value = control.dataset.value;
 
-  if (action === "brand-home") {
+  if (action === "share-app") void shareDemo();
+  else if (action === "install-app") void installApp();
+  else if (action === "copy-demo-link") {
+    copyText(state.modal?.url || demoShareUrl()).then(() => { state.modal = null; renderApp(); showToast(tr("shareCopied")); }).catch(() => document.querySelector("#share-link-value")?.select());
+  } else if (action === "reset-demo") resetDemo();
+  else if (action === "brand-home") {
     event.preventDefault();
     state.view = "welcome";
     state.error = "";
@@ -1763,6 +1903,23 @@ document.addEventListener("keydown", (event) => {
     renderApp();
   }
 });
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  renderApp();
+});
+
+window.addEventListener("appinstalled", () => {
+  appInstalled = true;
+  deferredInstallPrompt = null;
+  renderApp();
+  showToast(tr("appInstalled"));
+});
+
+if ("serviceWorker" in navigator && (window.isSecureContext || ["localhost", "127.0.0.1"].includes(location.hostname))) {
+  navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {});
+}
 
 renderApp();
 loadProductData().then(() => renderApp());

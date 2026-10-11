@@ -405,13 +405,7 @@ const toastElement = document.querySelector("#toast");
 let deferredInstallPrompt = null;
 let appInstalled = Boolean(navigator.standalone) || Boolean(window.matchMedia?.("(display-mode: standalone)").matches);
 const iosDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-const mascots = {
-  welcome: "/brand/mascot-waving.png", search: "/brand/mascot-waving.png",
-  move: "/brand/mascot-waving.png", money: "/brand/mascot-waving.png",
-  life: "/brand/mascot-waving.png", meet: "/brand/mascot-waving.png",
-  calendar: "/brand/mascot-waving.png", help: "/brand/mascot-waving.png",
-  home: "/brand/mascot-waving.png", searchGlow: "/brand/mascot-waving.png",
-};
+const DOM_QUESTION_IMAGE = "/assets/dom-question.png";
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
@@ -1066,9 +1060,9 @@ function homeRowsForCurrentTab() {
 }
 
 function noHomesState() {
-  if (catalogState === "loading") return `<div class="browse-empty"><img src="${mascots.help}" alt=""><h3>${escapeHtml(tr("catalogLoading"))}</h3></div>`;
-  if (catalogState === "error") return `<div class="browse-empty"><img src="${mascots.help}" alt=""><h3>${escapeHtml(tr("catalogUnavailable"))}</h3><p>${escapeHtml(tr("catalogUnavailableText"))}</p><button type="button" class="secondary-button" data-action="change-place">${escapeHtml(tr("searchElse"))}</button></div>`;
-  return `<div class="browse-empty"><img src="${mascots.help}" alt=""><h3>${escapeHtml(tr("noHomes").replace("{place}", state.place))}</h3><p>${escapeHtml(tr("noHomesText"))}</p><button type="button" class="secondary-button" data-action="change-place">${escapeHtml(tr("searchElse"))}</button></div>`;
+  if (catalogState === "loading") return `<div class="browse-empty"><img src="${DOM_QUESTION_IMAGE}" alt=""><h3>${escapeHtml(tr("catalogLoading"))}</h3></div>`;
+  if (catalogState === "error") return `<div class="browse-empty"><img src="${DOM_QUESTION_IMAGE}" alt=""><h3>${escapeHtml(tr("catalogUnavailable"))}</h3><p>${escapeHtml(tr("catalogUnavailableText"))}</p><button type="button" class="secondary-button" data-action="change-place">${escapeHtml(tr("searchElse"))}</button></div>`;
+  return `<div class="browse-empty"><img src="${DOM_QUESTION_IMAGE}" alt=""><h3>${escapeHtml(tr("noHomes").replace("{place}", state.place))}</h3><p>${escapeHtml(tr("noHomesText"))}</p><button type="button" class="secondary-button" data-action="change-place">${escapeHtml(tr("searchElse"))}</button></div>`;
 }
 
 function browseFilters() {
@@ -1100,9 +1094,9 @@ function resultsScreen() {
 }
 
 function noPeopleState() {
-  if (catalogState === "loading") return `<div class="browse-empty"><img src="${mascots.meet}" alt=""><h3>${escapeHtml(tr("catalogLoading"))}</h3></div>`;
-  if (catalogState === "error") return `<div class="browse-empty"><img src="${mascots.meet}" alt=""><h3>${escapeHtml(tr("catalogUnavailable"))}</h3><p>${escapeHtml(tr("catalogUnavailableText"))}</p></div>`;
-  return `<div class="browse-empty"><img src="${mascots.meet}" alt=""><h3>${escapeHtml(tr("noDiscoverablePeople"))}</h3></div>`;
+  if (catalogState === "loading") return `<div class="browse-empty"><img src="${DOM_QUESTION_IMAGE}" alt=""><h3>${escapeHtml(tr("catalogLoading"))}</h3></div>`;
+  if (catalogState === "error") return `<div class="browse-empty"><img src="${DOM_QUESTION_IMAGE}" alt=""><h3>${escapeHtml(tr("catalogUnavailable"))}</h3><p>${escapeHtml(tr("catalogUnavailableText"))}</p></div>`;
+  return `<div class="browse-empty"><img src="${DOM_QUESTION_IMAGE}" alt=""><h3>${escapeHtml(tr("noDiscoverablePeople"))}</h3></div>`;
 }
 
 function personSummary(person) {
@@ -1255,7 +1249,7 @@ function groupShortlist() {
     const id = idPart.join(":");
     return type === "home" ? { type, item: homes.find((entry) => entry.id === id) } : { type, item: people.find((entry) => entry.id === id) };
   }).filter((entry) => entry.item);
-  if (!entries.length) return `<div class="group-empty compact"><img src="${mascots.searchGlow}" alt=""><h3>${escapeHtml(tr("sharedShortlist"))}</h3><p>${escapeHtml(STRINGS("Save a home or person to start a shortlist everyone can review.", "Salvează o locuință sau o persoană pentru a începe o listă comună.", "Guarda una vivienda o persona para empezar una lista común.")[state.locale])}</p><button class="secondary-button" type="button" data-action="go-tab" data-tab="homes">${escapeHtml(tr("home"))}</button></div>`;
+  if (!entries.length) return `<div class="group-empty compact"><img src="${DOM_QUESTION_IMAGE}" alt=""><h3>${escapeHtml(tr("sharedShortlist"))}</h3><p>${escapeHtml(STRINGS("Save a home or person to start a shortlist everyone can review.", "Salvează o locuință sau o persoană pentru a începe o listă comună.", "Guarda una vivienda o persona para empezar una lista común.")[state.locale])}</p><button class="secondary-button" type="button" data-action="go-tab" data-tab="homes">${escapeHtml(tr("home"))}</button></div>`;
   return `<div class="shared-list">${entries.map(({ type, item }) => `<article class="shared-item"><span class="shared-item-icon">${icon(type === "home" ? "home" : "person", 20)}</span><span class="member-detail"><strong>${escapeHtml(item.title || item.name)}</strong><span>${escapeHtml([item.city, type === "home" ? homePrice(item) : tr("previewPeople")].filter(Boolean).join(" · "))}</span></span><button class="quiet-link" type="button" data-action="remove-shared-item" data-key="${escapeAttr(`${type}:${item.id}`)}">${icon("close", 17)}<span class="sr-only">${escapeHtml(tr("hide"))}</span></button></article>`).join("")}</div>`;
 }
 
@@ -1277,7 +1271,7 @@ function planCards() {
 function togetherScreen() {
   if (!state.group) {
     const soloViewingPlans = state.viewingPlans.length ? planCards() : "";
-    return `<main class="results-shell together-shell" id="main-content">${demoCue()}${topSection(tr("together"))}${soloViewingPlans}<div class="group-empty"><img src="${mascots.roommates}" alt=""><h2>${escapeHtml(tr("groupNone"))}</h2><p>${escapeHtml(tr("groupNoneText"))}</p><button class="primary-button" type="button" data-action="open-create-group">${escapeHtml(tr("createTogether"))}${icon("arrow", 18)}</button></div></main>`;
+    return `<main class="results-shell together-shell" id="main-content">${demoCue()}${topSection(tr("together"))}${soloViewingPlans}<div class="group-empty"><img src="${DOM_QUESTION_IMAGE}" alt=""><h2>${escapeHtml(tr("groupNone"))}</h2><p>${escapeHtml(tr("groupNoneText"))}</p><button class="primary-button" type="button" data-action="open-create-group">${escapeHtml(tr("createTogether"))}${icon("arrow", 18)}</button></div></main>`;
   }
   return `<main class="results-shell together-shell" id="main-content">
     ${demoCue()}
@@ -1293,7 +1287,7 @@ function savedScreen() {
   const savedPeople = state.savedPeople.map((id) => people.find((person) => person.id === id)).filter(Boolean).filter((person) => !state.hiddenPeople[person.id]);
   const any = savedHomes.length + savedPeople.length > 0;
   return `<main class="results-shell saved-shell" id="main-content">${demoCue()}${topSection(tr("saved"))}
-    ${any ? `${savedHomes.length ? `<h2 class="subsection-title">${escapeHtml(tr("home"))}</h2><section class="saved-grid">${savedHomes.map(homeCard).join("")}</section>` : ""}${savedPeople.length ? `<h2 class="subsection-title">${escapeHtml(tr("people"))}</h2><section class="people-grid">${savedPeople.map(personCard).join("")}</section>` : ""}` : `<div class="group-empty saved-empty"><img src="${mascots.search}" alt=""><h2>${escapeHtml(tr("noSaved"))}</h2><p>${escapeHtml(tr("noSavedText"))}</p><button class="primary-button" type="button" data-action="go-tab" data-tab="homes">${escapeHtml(tr("home"))}${icon("arrow", 18)}</button></div>`}
+    ${any ? `${savedHomes.length ? `<h2 class="subsection-title">${escapeHtml(tr("home"))}</h2><section class="saved-grid">${savedHomes.map(homeCard).join("")}</section>` : ""}${savedPeople.length ? `<h2 class="subsection-title">${escapeHtml(tr("people"))}</h2><section class="people-grid">${savedPeople.map(personCard).join("")}</section>` : ""}` : `<div class="group-empty saved-empty"><img src="${DOM_QUESTION_IMAGE}" alt=""><h2>${escapeHtml(tr("noSaved"))}</h2><p>${escapeHtml(tr("noSavedText"))}</p><button class="primary-button" type="button" data-action="go-tab" data-tab="homes">${escapeHtml(tr("home"))}${icon("arrow", 18)}</button></div>`}
   </main>`;
 }
 
@@ -1312,7 +1306,7 @@ function youScreen() {
   const percentage = profileProgress();
   return `<main class="results-shell you-shell" id="main-content">${demoCue()}${topSection(tr("you"))}
     <div class="you-layout"><div class="you-primary">
-      <section class="profile-progress-card"><div class="profile-hello"><img src="${mascots.help}" alt=""><div><h2>${escapeHtml(tr("profileStatus"))}</h2><p>${escapeHtml(`${done} / ${steps.length} ${tr("answered")}`)}</p></div></div><progress class="profile-meter" value="${percentage}" max="100" aria-label="${escapeAttr(tr("profileStatus"))}">${percentage}%</progress><div class="profile-meter-copy"><span>${percentage}% ${escapeHtml(tr("complete"))}</span><button class="quiet-link" type="button" data-action="start-profile">${escapeHtml(tr("resume"))}${icon("arrow", 16)}</button></div></section>
+      <section class="profile-progress-card"><div class="profile-hello"><img src="${DOM_QUESTION_IMAGE}" alt=""><div><h2>${escapeHtml(tr("profileStatus"))}</h2><p>${escapeHtml(`${done} / ${steps.length} ${tr("answered")}`)}</p></div></div><progress class="profile-meter" value="${percentage}" max="100" aria-label="${escapeAttr(tr("profileStatus"))}">${percentage}%</progress><div class="profile-meter-copy"><span>${percentage}% ${escapeHtml(tr("complete"))}</span><button class="quiet-link" type="button" data-action="start-profile">${escapeHtml(tr("resume"))}${icon("arrow", 16)}</button></div></section>
       <section class="profile-card"><div class="profile-list-head"><h2>${escapeHtml(tr("editProfile"))}</h2><span>${escapeHtml(tr("profilePrivate"))}</span></div>${profileRows()}</section>
     </div><div class="settings-stack">
       <section class="settings-card"><h2>${escapeHtml(tr("privacy"))}</h2><p>${escapeHtml(tr("localOnly"))}</p><div class="settings-row"><strong>${escapeHtml(tr("language"))}</strong>${languagePicker()}</div><div class="settings-row"><strong>${escapeHtml(tr("place" in WORDS[state.locale] ? "place" : "destination"))}</strong><button class="quiet-link" type="button" data-action="change-place">${escapeHtml(state.place || tr("unanswered"))}${icon("pencil", 15)}</button></div></section>

@@ -1,4 +1,4 @@
-const CACHE_NAME = "domi-shell-b540e1db513f";
+const CACHE_NAME = "domi-shell-e93026395435";
 const LOCAL_DEV_HOSTS = new Set(["localhost", "127.0.0.1"]);
 const LOCAL_DEV_FRESH_FILES = new Set([
   "/index.html",

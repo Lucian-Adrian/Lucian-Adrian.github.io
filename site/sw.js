@@ -1,18 +1,19 @@
-const CACHE_NAME = "domi-shell-f5d7928f05b9";
+const CACHE_NAME = "domi-shell-cd8ee577d419";
 const LOCAL_DEV_HOSTS = new Set(["localhost", "127.0.0.1"]);
 const LOCAL_DEV_FRESH_FILES = new Set([
   "/index.html",
   "/styles.css",
   "/app.js",
   "/data.js",
+  "/locales.js",
   "/manifest.webmanifest",
 ]);
 const CORE_FILES = [
-  "/",
   "/index.html",
   "/styles.css",
   "/app.js",
   "/data.js",
+  "/locales.js",
   "/manifest.webmanifest",
   "/assets/nunito.ttf",
   "/assets/pwa-192.png",
@@ -21,6 +22,9 @@ const CORE_FILES = [
   "/brand/logo.png",
   "/brand/wordmark.png",
   "/brand/mascot-waving.png",
+  "/assets/dom-entry.png",
+  "/assets/dom-button.png",
+  "/assets/dom-question.png",
 ];
 
 self.addEventListener("install", (event) => {
@@ -48,21 +52,17 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith("/api/")) return;
 
   const appRoot = new URL(self.registration.scope);
-  if (request.mode === "navigate" && url.pathname === appRoot.pathname) {
+  if (request.mode === "navigate" && (url.pathname === appRoot.pathname || url.pathname === `${appRoot.pathname}app`)) {
     event.respondWith((async () => {
       try {
         const response = await fetch(request);
-        if (response.ok) {
-          const shell = await caches.open(CACHE_NAME);
-          await shell.put(new URL("/index.html", self.registration.scope).href, response.clone());
-        }
         return response;
       } catch {
         const shell = await caches.open(CACHE_NAME);
-        const cached = await shell.match(request, { ignoreSearch: true })
-          ?? await shell.match(new URL("/index.html", self.registration.scope).href);
+        const cached = await shell.match(new URL("/index.html", self.registration.scope).href);
         return cached ?? new Response("DOMI is offline. Reconnect to load the app.", {
           status: 503,
           headers: { "Content-Type": "text/plain; charset=utf-8" },

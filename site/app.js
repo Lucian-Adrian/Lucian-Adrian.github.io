@@ -8,7 +8,6 @@ const WORDS = {
     where: "Where would you like to live?", destination: "Destination city", cityPlaceholder: "Berlin, New York, Chișinău...", search: "Search",
     promiseBrowse: "Start with the place", promiseBrowseText: "See homes and people before building a profile.", promisePrivate: "Your pace, your privacy", promisePrivateText: "Add only the details that help you find a fit.",
     footerLocal: "This preview keeps your choices on this device.", footerTagline: "Choose a place. Find your people. Build a home together.",
-    welcomeFootnote: "Start with a place. Make it yours.",
     language: "Language", back: "Back", next: "Continue", skip: "Skip for now", saveAnswer: "Save answer",
     shareApp: "Share sample", copyLink: "Copy link", shareLinkHelp: "Open or copy this link to try the sample search. It contains no saved choices.", installApp: "Install", appInstalled: "Domi is ready on your home screen.", shareCopied: "Sample link copied. It does not include your saved choices.",
     installHelpTitle: "Keep Domi close", installHelpText: "In Safari, tap Share, then choose Add to Home Screen. This keeps the app on your device.",
@@ -47,7 +46,6 @@ const WORDS = {
     where: "Unde ai vrea să locuiești?", destination: "Orașul dorit", cityPlaceholder: "Berlin, New York, Chișinău...", search: "Caută",
     promiseBrowse: "Începe cu locul", promiseBrowseText: "Vezi locuințele și oamenii înainte să-ți completezi profilul.", promisePrivate: "Ritmul și intimitatea ta", promisePrivateText: "Adaugă doar detaliile care te ajută să găsești o potrivire.",
     footerLocal: "În această previzualizare, alegerile rămân pe acest dispozitiv.", footerTagline: "Alege un loc. Găsește-ți oamenii. Construiți împreună un cămin.",
-    welcomeFootnote: "Începe cu un loc. Fă-l să se simtă ca acasă.",
     language: "Limba", back: "Înapoi", next: "Continuă", skip: "Sar peste deocamdată", saveAnswer: "Salvează răspunsul",
     shareApp: "Distribuie exemplul", copyLink: "Copiază linkul", shareLinkHelp: "Deschide sau copiază linkul pentru a încerca exemplul. Nu conține alegerile tale.", installApp: "Instalează", appInstalled: "Domi este pe ecranul principal.", shareCopied: "Linkul către exemplu a fost copiat. Nu include alegerile tale.",
     installHelpTitle: "Păstrează Domi aproape", installHelpText: "În Safari, apasă pe Distribuie, apoi Adaugă la ecranul principal. Aplicația rămâne pe dispozitivul tău.",
@@ -86,7 +84,6 @@ const WORDS = {
     where: "¿Dónde te gustaría vivir?", destination: "Ciudad de destino", cityPlaceholder: "Berlín, Nueva York, Chisináu...", search: "Buscar",
     promiseBrowse: "Empieza por el lugar", promiseBrowseText: "Explora viviendas y personas antes de crear un perfil.", promisePrivate: "A tu ritmo y con privacidad", promisePrivateText: "Añade solo lo que te ayude a encontrar una buena opción.",
     footerLocal: "En esta vista previa, tus decisiones se guardan en este dispositivo.", footerTagline: "Elige un lugar. Encuentra a tu gente. Cread un hogar juntos.",
-    welcomeFootnote: "Empieza por un lugar. Hazlo tuyo.",
     language: "Idioma", back: "Atrás", next: "Continuar", skip: "Omitir por ahora", saveAnswer: "Guardar respuesta",
     shareApp: "Compartir ejemplo", copyLink: "Copiar enlace", shareLinkHelp: "Abre o copia este enlace para probar el ejemplo. No contiene tus opciones guardadas.", installApp: "Instalar", appInstalled: "Domi está en tu pantalla de inicio.", shareCopied: "Se copió el enlace del ejemplo. No incluye tus opciones guardadas.",
     installHelpTitle: "Ten Domi a mano", installHelpText: "En Safari, toca Compartir y elige Añadir a pantalla de inicio. La aplicación se queda en tu dispositivo.",
@@ -717,7 +714,6 @@ function welcomeScreen() {
       <button class="primary-button search-button" type="submit">${escapeHtml(tr("search"))}${icon("arrow", 19)}</button>
       ${state.error ? `<p class="inline-error search-error" id="search-error" role="alert">${escapeHtml(state.error)}</p>` : `<span class="sr-only" id="search-error"></span>`}
     </form>
-    <p class="landing-footer">${escapeHtml(tr("welcomeFootnote"))}</p>
   </main>`;
 }
 
@@ -1174,16 +1170,19 @@ function eventTimeZone(city) {
 function planCards() {
   const proposalCount = state.roomProposals.length;
   const viewings = state.viewingPlans;
-  return `<section class="plan-card"><div class="plan-head"><span class="together-icon">${icon("key", 22)}</span><div><h2>${escapeHtml(tr("roomPlan"))}</h2><p>${escapeHtml(tr("planExplain"))}</p></div><button type="button" class="quiet-link" data-action="open-room-plan">${icon("arrow", 18)}<span class="sr-only">${escapeHtml(tr("roomPlan"))}</span></button></div>
-    <div class="member-list">${memberRows()}</div><p class="plan-footnote">${icon("info", 15)}${escapeHtml(proposalCount ? tr("proposalSaved") : tr("noSplit"))}</p></section>
-  <section class="plan-card"><div class="plan-head"><span class="together-icon calendar-icon">${icon("calendar", 22)}</span><div><h2>${escapeHtml(tr("viewingPlan"))}</h2><p>${escapeHtml(viewings.length ? STRINGS("Keep the visit plan and outcome here.", "Păstrează aici planul și concluzia vizionării.", "Guarda aquí el plan y el resultado de la visita.")[state.locale] : tr("noEvents"))}</p></div><button type="button" class="quiet-link" data-action="plan-viewing">${icon("plus", 19)}<span class="sr-only">${escapeHtml(tr("viewingPlan"))}</span></button></div>
+  const roomPlan = state.group ? `<section class="plan-card"><div class="plan-head"><span class="together-icon">${icon("key", 22)}</span><div><h2>${escapeHtml(tr("roomPlan"))}</h2><p>${escapeHtml(tr("planExplain"))}</p></div><button type="button" class="quiet-link" data-action="open-room-plan">${icon("arrow", 18)}<span class="sr-only">${escapeHtml(tr("roomPlan"))}</span></button></div>
+    <div class="member-list">${memberRows()}</div><p class="plan-footnote">${icon("info", 15)}${escapeHtml(proposalCount ? tr("proposalSaved") : tr("noSplit"))}</p></section>` : "";
+  return `${roomPlan}<section class="plan-card"><div class="plan-head"><span class="together-icon calendar-icon">${icon("calendar", 22)}</span><div><h2>${escapeHtml(tr("viewingPlan"))}</h2><p>${escapeHtml(viewings.length ? STRINGS("Keep the visit plan and outcome here.", "Păstrează aici planul și concluzia vizionării.", "Guarda aquí el plan y el resultado de la visita.")[state.locale] : tr("noEvents"))}</p></div><button type="button" class="quiet-link" data-action="plan-viewing">${icon("plus", 19)}<span class="sr-only">${escapeHtml(tr("viewingPlan"))}</span></button></div>
     ${viewings.length ? `<div class="member-list">${viewings.map((plan, index) => { const item = homes.find((home) => home.id === plan.homeId); return `<div class="member-row"><span class="member-avatar">${icon("calendar", 16)}</span><span class="member-detail"><strong>${escapeHtml(item?.title || tr("unknown"))}</strong><span>${escapeHtml([plan.date, plan.time, plan.timeZone].filter(Boolean).join(" · ") || STRINGS("Date not set", "Data nu e stabilită", "Fecha sin definir")[state.locale])}</span></span><span class="status-badge ${plan.outcome ? "ready" : "draft"}">${escapeHtml(plan.outcome ? tr(plan.outcome) : STRINGS("Plan saved", "Plan salvat", "Plan guardado")[state.locale])}</span><button class="quiet-link" type="button" data-action="viewing-outcome" data-index="${index}">${icon("arrow", 16)}<span class="sr-only">${escapeHtml(tr("viewingOutcome"))}</span></button></div>`; }).join("")}</div>` : ""}
     <p class="plan-footnote">${icon("shield", 15)}${escapeHtml(tr("viewingSaved"))}</p></section>`;
 }
 
 function togetherScreen() {
   if (!state.group) {
-    return `<main class="results-shell together-shell" id="main-content">${demoCue()}${topSection(tr("togetherTitle"), tr("togetherSub"), tr("together"))}<div class="group-empty"><img src="${mascots.roommates}" alt=""><h2>${escapeHtml(tr("groupNone"))}</h2><p>${escapeHtml(tr("groupNoneText"))}</p><button class="primary-button" type="button" data-action="open-create-group">${escapeHtml(tr("createTogether"))}${icon("arrow", 18)}</button></div>${previewBanner()}</main>`;
+    const soloViewingPlans = state.viewingPlans.length ? planCards() : "";
+    const soloHeading = STRINGS("Your plans", "Planurile tale", "Tus planes")[state.locale];
+    const soloSubcopy = STRINGS("Keep your shortlist and viewing plans together.", "Păstrează lista și planurile de vizionare la un loc.", "Guarda tu lista y tus planes de visita en un solo lugar.")[state.locale];
+    return `<main class="results-shell together-shell" id="main-content">${demoCue()}${topSection(soloHeading, soloSubcopy, tr("together"))}${soloViewingPlans}<div class="group-empty"><img src="${mascots.roommates}" alt=""><h2>${escapeHtml(tr("groupNone"))}</h2><p>${escapeHtml(tr("groupNoneText"))}</p><button class="primary-button" type="button" data-action="open-create-group">${escapeHtml(tr("createTogether"))}${icon("arrow", 18)}</button></div>${previewBanner()}</main>`;
   }
   return `<main class="results-shell together-shell" id="main-content">
     ${demoCue()}

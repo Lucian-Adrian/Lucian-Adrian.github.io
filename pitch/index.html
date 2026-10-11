@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https: data:; style-src 'self'; font-src 'self' data:; script-src 'self'; connect-src 'self' https:; object-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Domi pitch | A home that fits</title>
+  <meta name="description" content="Domi helps students find housemates they can live with. Explore the full mascot pitch and the founder's script.">
+  <link rel="canonical" href="https://trydomi.vercel.app/pitch">
+  <meta property="og:title" content="Domi | A home that fits">
+  <meta property="og:image" content="https://trydomi.vercel.app/pitch/slide-01.png">
+  <link rel="stylesheet" href="/pitch/pitch.css">
+  <script src="/pitch/pitch.js" type="module"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a href="/" aria-label="Domi home"><img class="wordmark" src="/pitch/wordmark.png" alt="domi"></a>
+    <span class="deck-label">A home that fits</span>
+    <nav aria-label="Presentation controls">
+      <button id="notes-toggle" aria-pressed="false">Script</button>
+      <button id="overview-toggle" aria-expanded="false">All slides</button>
+      <a href="/pitch/Domi-pitch.pdf" download>PDF</a>
+      <a href="/pitch/Domi-pitch.pptx" download>PowerPoint</a>
+      <button id="present" class="primary">Present</button>
+    </nav>
+  </header>
+  <main>
+    <div class="presentation" id="presentation">
+      <figure class="slide-frame" id="slide-frame">
+        <img id="slide-image" src="/pitch/slide-01.png" alt="Who would you share a home with?">
+      </figure>
+      <aside class="qr-panel" id="qr-panel" hidden>
+        <a id="qr-link" href="/blog"><img id="qr-image" src="/pitch/research-qr.png" alt="Scan to open the Domi research"></a>
+        <a id="qr-label" href="/blog">Read the 23 startup stories</a>
+      </aside>
+      <div class="slide-controls">
+        <button id="previous" aria-label="Previous slide">←</button>
+        <div><span id="counter" aria-live="polite">01 / 27</span><div class="progress"><span id="progress-fill"></span></div></div>
+        <button id="next" aria-label="Next slide">→</button>
+      </div>
+      <section class="passport-action" id="passport-action" hidden aria-label="Student passport example">
+        <p>Want a closer look at the student passport?</p>
+        <a class="action-link" href="/pitch/profile.html">View student passport</a>
+      </section>
+      <section class="contact-bar" id="contact-bar" hidden aria-labelledby="contact-title">
+        <div class="contact-copy">
+          <h2 id="contact-title">Free 20-minute Google Meet chat</h2>
+          <p>Message me to choose a time.</p>
+        </div>
+        <nav aria-label="Contact Lucian">
+          <a href="https://linkedin.com/in/lucian-adrian">LinkedIn</a>
+          <a href="tel:+37369044877">+373 69 044 877</a>
+          <a href="mailto:lucian@teamcreator.ai?subject=20-minute%20Domi%20chat">lucian@teamcreator.ai</a>
+        </nav>
+      </section>
+    </div>
+    <section id="speaker-panel" class="speaker-panel" hidden aria-label="Speaker script">
+      <div class="notes-heading"><h1 id="notes-title">Speaker script</h1><a href="/pitch/script.md" download>Download script</a></div>
+      <p id="note"></p>
+      <details><summary>Read the complete script</summary><div id="full-script"></div></details>
+    </section>
+    <section id="overview" class="overview" hidden aria-label="All presentation slides"></section>
+  </main>
+  <footer><span>27 slides. One home that fits.</span><span class="keyboard-hint">← → slides · F present · N script · G all slides</span><a href="/app">Try Domi</a><a href="/blog">Our research</a></footer>
+</body>
+</html>

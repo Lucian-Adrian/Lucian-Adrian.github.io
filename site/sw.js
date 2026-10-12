@@ -1,4 +1,4 @@
-const CACHE_NAME = "domi-shell-e65421a888b0";
+const CACHE_NAME = "domi-shell-0bc6387f98bc";
 const LOCAL_DEV_HOSTS = new Set(["localhost", "127.0.0.1"]);
 const LOCAL_DEV_FRESH_FILES = new Set([
   "/index.html",
@@ -6,6 +6,8 @@ const LOCAL_DEV_FRESH_FILES = new Set([
   "/app.js",
   "/search-logic.js",
   "/dom-replies.js",
+  "/city-picker.js",
+  "/journey-controls.js",
   "/data.js",
   "/locales.js",
   "/manifest.webmanifest",
@@ -16,6 +18,8 @@ const CORE_FILES = [
   "/app.js",
   "/search-logic.js",
   "/dom-replies.js",
+  "/city-picker.js",
+  "/journey-controls.js",
   "/data.js",
   "/locales.js",
   "/manifest.webmanifest",

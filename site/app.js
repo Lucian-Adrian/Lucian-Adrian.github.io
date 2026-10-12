@@ -1,6 +1,8 @@
 import { localeWords, translateText } from "./locales.js";
 import { questionIdsFor, activeAnswerKeys, homeFit, personFit, rentBasisFor } from "./search-logic.js";
 import { domReply } from "./dom-replies.js";
+import { destinationSuggestions, normalizeDestination } from "./city-picker.js";
+import { renderNumberControl, clampNumber, stageCopy } from "./journey-controls.js";
 
 const DEMO_MODE = new URLSearchParams(window.location.search).get("demo") === "1";
 const STORAGE_KEY = "domi-product-preview-v1";
@@ -139,6 +141,7 @@ const tr = (key) => WORDS[state.locale]?.[key] ?? (WORDS.en[key] ? translateText
 const localized = (value) => typeof value === "string" ? value : (value?.[state.locale] ?? (value?.en ? translateText(state.locale, value.en) : ""));
 
 const iconPaths = {
+  down: '<path d="m6 9 6 6 6-6"/>',
   pin: '<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.4"/>',
   search: '<circle cx="10.8" cy="10.8" r="6.7"/><path d="m16 16 4.5 4.5"/>',
   home: '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1Z"/>',
@@ -331,6 +334,9 @@ const state = {
   place: typeof savedState?.place === "string" ? savedState.place : "",
   destinationEdited: Boolean(savedState?.place),
   destinationDraft: null,
+  cityMenu: null,
+  cityMenuSuppressed: null,
+  bridgeChapter: null,
   locationPrefill: "",
   locationSuggestion: null,
   answers: DEMO_MODE ? {} : savedState?.answers && typeof savedState.answers === "object" ? savedState.answers : {},
@@ -535,8 +541,8 @@ function answerComplete(step) {
   const value = state.answers[step.id];
   if (step.type === "money") return value?.amount !== "" && value?.amount != null && Number.isFinite(Number(value.amount)) && Number(value.amount) >= 0 && Boolean(value?.currency);
   if (step.type === "intro") return typeof value === "string" && value.trim().length > 0;
-  if (step.id === "householdSize") return value === "any" || (value !== "" && value != null && Number.isInteger(Number(value)) && Number(value) >= Math.max(1, partySizeFromAnswer() ?? 1));
-  if (step.id === "space" && ["home", "household"].includes(state.answers.goal)) return value === "any" || (value !== "" && value != null && Number.isInteger(Number(value)) && Number(value) >= 1);
+  if (step.id === "householdSize") return value === "any" || (value !== "" && value != null && Number.isInteger(Number(value)) && Number(value) >= Math.max(1, partySizeFromAnswer() ?? 1) && Number(value) <= 40);
+  if (step.id === "space" && ["home", "household"].includes(state.answers.goal)) return value === "any" || (value !== "" && value != null && Number.isInteger(Number(value)) && Number(value) >= 0 && Number(value) <= 40);
   if (step.id === "upfrontFunds") {
     if (!value || value.amount === "" || value.amount == null) return true;
     return Number.isFinite(Number(value.amount)) && Number(value.amount) >= 0 && Boolean(value.currency) && ["personal-share", "whole-home"].includes(value.basis);
@@ -718,21 +724,58 @@ function footerLandscape() {
   return `<svg class="cityline" aria-hidden="true" viewBox="0 0 800 112" preserveAspectRatio="none"><path d="M0 112V75h35V47h26v65h17V66h29v46h20V55h20v57h19V79h33v33h13V59h21v53h17V75h33v37h20V37h18v75h21V61h34v51h19V71h24v41h18V48h24v64h20V78h35v34h18V61h26v51h19V31h20v81h23V69h36v43h18V49h26v63h43V68h33v44Z" fill="#a8bd90" opacity=".42"/><path d="M0 112V93h18V74h20v38h26V83h20v29h32V99h20v13h26V78h17v34h27V90h19v22h21V69h25v43h26V85h17v27h27V96h23v16h32V77h18v35h34V91h22v21h26V71h25v41h26V87h21v25h29V79h22v33h37V93h19v19h40V84h20v28h34V67h24v45h40V85h22v27h31Z" fill="#7f9b6c" opacity=".55"/></svg>`;
 }
 
+function destinationField(id, value) {
+  const expand = FIVE("Choose a city", "Alege un oraș", "Elegir ciudad", "Choisir une ville", "Stadt auswählen");
+  return '<div class="destination-picker"><label class="sr-only" for="' + id + '">' + escapeHtml(tr("destination")) + '</label><div class="search-input-wrap">' + icon("pin", 20) + '<input class="search-input" id="' + id + '" name="place" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="' + id + '-options" value="' + escapeAttr(value) + '" placeholder="' + escapeAttr(tr("cityPlaceholder")) + '" autocomplete="off" autocapitalize="words" spellcheck="false" required><button class="city-toggle" type="button" data-action="city-toggle" data-field="' + id + '" aria-label="' + escapeAttr(localized(expand)) + '">' + icon("down", 16) + '</button></div><div class="city-options" id="' + id + '-options" role="listbox" aria-label="' + escapeAttr(tr("destination")) + '" hidden></div></div>';
+}
+
+function closeCityMenu() {
+  if (!state.cityMenu) return;
+  const field = document.getElementById(state.cityMenu.fieldId);
+  const list = document.getElementById(state.cityMenu.fieldId + "-options");
+  field?.setAttribute("aria-expanded", "false");
+  field?.removeAttribute("aria-activedescendant");
+  if (list) list.hidden = true;
+  state.cityMenu = null;
+}
+
+function updateCityMenu(field, showAll = false, preserveIndex = false) {
+  const list = document.getElementById(field.id + "-options");
+  if (!list) return;
+  const rows = destinationSuggestions(showAll ? "" : field.value, citySuggestions(), state.locationPrefill || state.place);
+  const active = preserveIndex ? Math.min(state.cityMenu?.active ?? -1, rows.length - 1) : -1;
+  state.cityMenu = { fieldId: field.id, rows, active };
+  list.innerHTML = rows.map((row, index) => '<button type="button" class="city-option' + (index === active ? ' active' : '') + '" id="' + field.id + '-option-' + index + '" role="option" aria-selected="' + (index === active) + '" data-action="city-choice" data-field="' + field.id + '" data-value="' + escapeAttr(row.value) + '"><span class="city-option-icon">' + icon("pin", 17) + '</span><span><strong>' + escapeHtml(row.label) + '</strong><small>' + escapeHtml(row.detail) + '</small></span></button>').join("");
+  list.hidden = rows.length === 0;
+  field.setAttribute("aria-expanded", String(rows.length > 0));
+  if (active >= 0) field.setAttribute("aria-activedescendant", field.id + "-option-" + active);
+  else field.removeAttribute("aria-activedescendant");
+}
+
+function chooseCity(fieldId, value) {
+  const field = document.getElementById(fieldId);
+  if (!field) return;
+  field.value = value;
+  if (fieldId === "destination-input") {
+    state.destinationDraft = value;
+    state.destinationEdited = true;
+    state.locationPrefill = "";
+  } else if (state.modal) {
+    state.modal.destinationDraft = value;
+  }
+  closeCityMenu();
+  state.cityMenuSuppressed = fieldId;
+  field.focus();
+}
+
 function welcomeScreen() {
-  const options = citySuggestions().slice(0, 80).map((place) => `<option value="${escapeAttr(place)}"></option>`).join("");
   const placeValue = state.destinationDraft ?? (state.place || state.locationPrefill);
-  const locationDescription = state.locationPrefill && !state.place
-    ? `aria-description="${escapeAttr(STRINGS("Approximate location. You can change it anytime.", "Locație aproximativă. O poți schimba oricând.", "Ubicación aproximada. Puedes cambiarla cuando quieras.")[state.locale])}"`
-    : "";
   return `<main class="landing entry-screen" id="main-content">
     <section class="entry-scene" aria-hidden="true"><img src="/assets/dom-entry.png" alt=""></section>
     <form class="search-card entry-search-card" id="search-form" novalidate>
-      <div class="search-field-group">
-        <label class="sr-only" for="destination-input">${escapeHtml(tr("destination"))}</label>
-        <div class="search-input-wrap">${icon("pin", 20)}<input class="search-input" id="destination-input" name="place" list="city-options" value="${escapeAttr(placeValue)}" placeholder="${escapeAttr(tr("cityPlaceholder"))}" autocomplete="address-level2" aria-describedby="search-error" ${locationDescription} required><datalist id="city-options">${options}</datalist></div>
-      </div>
+      ${destinationField("destination-input", placeValue)}
       <div class="dom-button-wrap"><img class="dom-button-peek" src="/assets/dom-button.png" alt="" aria-hidden="true"><button class="primary-button search-button" type="submit">${escapeHtml(tr("next"))}${icon("arrow", 19)}</button></div>
-      ${state.error ? `<p class="inline-error search-error" id="search-error" role="alert">${escapeHtml(state.error)}</p>` : `<span class="sr-only" id="search-error"></span>`}
+      ${state.error ? `<p class="inline-error search-error" id="search-error" role="alert">${escapeHtml(state.error)}</p>` : '<span class="sr-only" id="search-error"></span>'}
     </form>
   </main>`;
 }
@@ -788,7 +831,7 @@ function questionCopy(step) {
 }
 
 function questionReaction(step) {
-  if (!hasRecordedAnswer(step)) return "";
+  if (!hasRecordedAnswer(step)) return state.bridgeChapter === step.chapter ? stageCopy(step.chapter, state.locale, state.answers.goal) : "";
   return domReply(step.id, state.answers, state.locale);
 }
 
@@ -797,15 +840,27 @@ function updateQuestionReaction() {
   const step = currentStep();
   if (!reactionElement || !step) return;
   const reaction = questionReaction(step);
+  const previousReaction = reactionElement.textContent;
   reactionElement.textContent = reaction;
   reactionElement.hidden = !reaction;
   const steps = visibleSteps();
   const nextButton = app.querySelector('[data-action="step-next"]');
+  if (nextButton) nextButton.disabled = !answerComplete(step);
   if (nextButton) nextButton.innerHTML = escapeHtml(step.id !== "goal" && state.step === steps.length - 1 ? localized(flowText.reviewAction) : tr("next")) + icon("arrow", 18);
   const progress = app.querySelector(".top-progress");
   if (progress) progress.max = steps.length;
+  const numberField = app.querySelector("[data-size-input]");
+  if (numberField) {
+    const value = numberField.value === "" ? null : Number(numberField.value);
+    app.querySelector('[data-action="number-adjust"][data-delta="-1"]').disabled = value == null || value <= Number(numberField.min);
+    app.querySelector('[data-action="number-adjust"][data-delta="1"]').disabled = value != null && value >= Number(numberField.max);
+    const flexible = app.querySelector(".no-preference-option");
+    flexible?.classList.toggle("selected", state.answers[step.id] === "any");
+    flexible?.setAttribute("aria-checked", String(state.answers[step.id] === "any"));
+    if (flexible?.querySelector(".choice-check")) flexible.querySelector(".choice-check").innerHTML = state.answers[step.id] === "any" ? icon("check", 14) : "";
+  }
   const dom = app.querySelector(".question-dom");
-  if (dom && reaction) {
+  if (dom && reaction && reaction !== previousReaction) {
     dom.classList.remove("is-reacting");
     void dom.offsetWidth;
     dom.classList.add("is-reacting");
@@ -836,13 +891,15 @@ function renderNumericPreference(step, bedrooms = false) {
   const value = state.answers[step.id] ?? "";
   const noPreference = value === "any";
   const label = bedrooms
-    ? STRINGS("Minimum bedrooms", "Număr minim de dormitoare", "Dormitorios como mínimo")[state.locale]
-    : STRINGS("People in the home, including you", "Persoane în locuință, inclusiv tu", "Personas en la vivienda, incluyéndote")[state.locale];
+    ? localized(FIVE("Minimum bedrooms", "Număr minim de dormitoare", "Dormitorios como mínimo", "Chambres minimum", "Mindestens benötigte Schlafzimmer"))
+    : localized(FIVE("People in the home, including you", "Persoane în locuință, inclusiv tu", "Personas en la vivienda, incluyéndote", "Personnes dans le logement, toi compris", "Personen im Haushalt, einschließlich dir"));
   const unit = bedrooms
-    ? STRINGS("bedrooms", "dormitoare", "dormitorios")[state.locale]
-    : STRINGS("people", "persoane", "personas")[state.locale];
-  const min = bedrooms ? 1 : Math.max(1, partySizeFromAnswer() ?? 1);
-  return `<div class="numeric-choice ${noPreference ? "no-preference" : ""}"><label class="small-field-label" for="number-${step.id}">${escapeHtml(label)}</label><div class="numeric-field-wrap"><input class="number-field" type="number" id="number-${step.id}" min="${min}" ${bedrooms ? "" : "step=1"} inputmode="numeric" value="${noPreference ? "" : escapeAttr(value)}" data-size-input data-step="${step.id}" ${noPreference ? "disabled" : ""}><span>${escapeHtml(unit)}</span></div><button class="choice-card no-preference-option ${noPreference ? "selected" : ""}" type="button" data-action="answer-choice" data-step="${step.id}" data-value="any" role="radio" aria-checked="${noPreference}"><span class="choice-icon">${icon("sparkle", 19)}</span><span class="choice-copy"><strong>${escapeHtml(STRINGS("No fixed number", "Fără un număr fix", "Sin una cifra fija")[state.locale])}</strong></span><span class="choice-check">${noPreference ? icon("check", 14) : ""}</span></button></div>`;
+    ? localized(FIVE("bedrooms", "dormitoare", "dormitorios", "chambres", "Schlafzimmer"))
+    : localized(FIVE("people", "persoane", "personas", "personnes", "Personen"));
+  const min = bedrooms ? 0 : Math.max(1, partySizeFromAnswer() ?? 1);
+  const decreaseLabel = localized(FIVE("One fewer", "Cu unul mai puțin", "Uno menos", "Un de moins", "Eins weniger"));
+  const increaseLabel = localized(FIVE("One more", "Cu unul mai mult", "Uno más", "Un de plus", "Eins mehr"));
+  return `<div class="numeric-choice">${renderNumberControl({ id: step.id, value: noPreference ? "" : value, min, max: 40, unit, label, decreaseLabel, increaseLabel })}<button class="choice-card no-preference-option ${noPreference ? "selected" : ""}" type="button" data-action="answer-choice" data-step="${step.id}" data-value="any" role="radio" aria-checked="${noPreference}"><span class="choice-icon">${icon("sparkle", 19)}</span><span class="choice-copy"><strong>${escapeHtml(STRINGS("No fixed number", "Fără un număr fix", "Sin una cifra fija")[state.locale])}</strong></span><span class="choice-check">${noPreference ? icon("check", 14) : ""}</span></button></div>`;
 }
 
 function renderMoney(step) {
@@ -885,7 +942,7 @@ function renderStepInput(step) {
   }
   if (step.type === "money") return renderMoney(step);
   if (step.type === "text") {
-    return `<label class="sr-only" for="answer-${step.id}">${escapeHtml(localized(step.prompt))}</label><textarea class="textarea-field" id="answer-${step.id}" data-answer-input data-step="${step.id}" maxlength="160" placeholder="${escapeAttr(STRINGS("Neighbourhoods, separated by commas…", "Cartiere, separate prin virgulă…", "Barrios, separados por comas…")[state.locale])}">${escapeHtml(state.answers[step.id] ?? "")}</textarea>`;
+    return `<label class="sr-only" for="answer-${step.id}">${escapeHtml(localized(step.prompt))}</label><textarea class="textarea-field" id="answer-${step.id}" data-answer-input data-step="${step.id}" maxlength="160" placeholder="${escapeAttr(localized(FIVE("Neighbourhoods, separated by commas…", "Cartiere, separate prin virgulă…", "Barrios, separados por comas…", "Quartiers, séparés par des virgules…", "Stadtteile, durch Kommas getrennt…")))}">${escapeHtml(state.answers[step.id] ?? "")}</textarea>`;
   }
   if (step.type === "intro") {
     const placeholder = state.answers.goal === "offer" ? localized(FIVE("A little about the space and the household…", "Câteva cuvinte despre spațiu și cei de acasă…", "Un poco sobre el espacio y quienes viven allí…", "Quelques mots sur le logement et ses habitants…", "Ein paar Worte zum Wohnraum und zum Haushalt…")) : tr("introPlaceholder");
@@ -900,14 +957,14 @@ function questionScreen() {
   const step = currentStep();
   const [prompt] = questionCopy(step);
   const reaction = questionReaction(step);
-  return `<main class="journey-shell" id="main-content">
+  return `<main class="journey-shell${state.lastRenderedQuestion !== step.id ? " is-step-entering" : ""}" id="main-content">
     <div class="question-dom${reaction ? " is-reacting" : ""}"><img class="question-dom-image" src="/assets/dom-question.png" alt=""><div class="dom-conversation"><div class="dom-bubble"><h1 class="journey-title">${escapeHtml(prompt)}</h1></div><p class="dom-thought" id="question-reaction" role="status" aria-live="polite" aria-atomic="true" ${reaction ? "" : "hidden"}>${escapeHtml(reaction)}</p></div></div>
     <section class="journey-card" aria-label="${escapeAttr(prompt)}" key="${step.id}">
       ${renderStepInput(step)}
     </section>
     <p class="inline-error" id="question-error" role="alert" ${state.error ? "" : "hidden"}>${escapeHtml(state.error)}</p>
     <div class="journey-actions">
-      <button class="primary-button" type="button" data-action="step-next">${escapeHtml(step.id !== "goal" && state.step === steps.length - 1 ? localized(flowText.reviewAction) : tr("next"))}${icon("arrow", 18)}</button>
+      <button class="primary-button" type="button" data-action="step-next" ${answerComplete(step) ? "" : "disabled"}>${escapeHtml(step.id !== "goal" && state.step === steps.length - 1 ? localized(flowText.reviewAction) : tr("next"))}${icon("arrow", 18)}</button>
       ${["goal", "offerType"].includes(step.id) ? "" : `<button class="text-button skip-button" type="button" data-action="step-skip">${escapeHtml(tr("skip"))}</button>`}
     </div>
   </main>`;
@@ -1320,10 +1377,21 @@ function renderMainView() {
 
 function renderApp({ scroll = false } = {}) {
   if (!app) return;
+  const activeField = document.activeElement;
+  const restoreDestination = ["destination-input", "modal-place"].includes(activeField?.id) ? { id: activeField.id, start: activeField.selectionStart, end: activeField.selectionEnd } : null;
   if (!visibleSteps().length) state.step = 0;
   document.documentElement.lang = state.locale;
+  state.cityMenu = null;
   app.innerHTML = `<div class="app-frame">${brandHeader()}${renderMainView()}${["welcome", "questionnaire", "review"].includes(state.view) ? "" : bottomNavigation()}</div>${renderModal()}`;
   bindImageFallbacks();
+  state.lastRenderedQuestion = state.view === "questionnaire" ? currentStep().id : null;
+  if (restoreDestination) {
+    const field = document.getElementById(restoreDestination.id);
+    if (field) {
+      field.focus();
+      if (restoreDestination.start != null) field.setSelectionRange(restoreDestination.start, restoreDestination.end);
+    }
+  }
   persist();
   if (scroll) window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
 }
@@ -1367,8 +1435,8 @@ function renderModal() {
     body = `<div class="modal-actions"><button class="primary-button" type="button" data-action="close-modal">${escapeHtml(tr("cancel"))}</button></div>`;
   } else if (modal.type === "change-place") {
     title = tr("changePlace");
-    subtitle = tr("unknownCity");
-    body = `<form id="change-place-form" class="modal-body"><label class="small-field-label" for="modal-place">${escapeHtml(tr("destination"))}</label><input class="text-field" id="modal-place" name="place" list="modal-city-options" value="${escapeAttr(state.place)}" required autocomplete="address-level2"><datalist id="modal-city-options">${citySuggestions().map((place) => `<option value="${escapeAttr(place)}"></option>`).join("")}</datalist><div class="modal-actions"><button class="secondary-button" type="button" data-action="close-modal">${escapeHtml(tr("cancel"))}</button><button class="primary-button" type="submit">${escapeHtml(tr("search"))}${icon("arrow", 16)}</button></div></form>`;
+    subtitle = "";
+    body = `<form id="change-place-form" class="modal-body">${destinationField("modal-place", modal.destinationDraft ?? state.place)}<div class="modal-actions"><button type="button" class="text-button" data-action="close-modal">${escapeHtml(tr("cancel"))}</button><button type="submit" class="primary-button">${escapeHtml(tr("next"))}${icon("arrow", 17)}</button></div></form>`;
   } else if (["create-group", "invite-people"].includes(modal.type)) {
     title = modal.type === "create-group" ? tr("createTogether") : tr("previewInvite");
     subtitle = tr("inviteWarning");
@@ -1430,6 +1498,7 @@ function openProfile(startIndex = null) {
     const next = steps.findIndex((step) => !answerComplete(step) && !state.skipped.includes(step.id));
     state.step = next >= 0 ? next : 0;
   }
+  state.bridgeChapter = null;
   state.view = "questionnaire";
   state.editingReview = startIndex != null && state.onboardingComplete;
   state.modal = null;
@@ -1438,7 +1507,7 @@ function openProfile(startIndex = null) {
 }
 
 function startSearch(place) {
-  const value = String(place ?? "").trim();
+  const value = normalizeDestination(String(place ?? "").trim(), citySuggestions(), state.locationPrefill);
   if (!value) {
     state.error = tr("locationRequired");
     state.view = "welcome";
@@ -1447,6 +1516,7 @@ function startSearch(place) {
     return;
   }
   const changed = placeKey(value) !== placeKey(state.place);
+  closeCityMenu();
   state.place = value;
   state.destinationDraft = null;
   state.destinationEdited = true;
@@ -1471,6 +1541,7 @@ function startSearch(place) {
 
 function stepBack() {
   state.error = "";
+  state.bridgeChapter = null;
   if (state.editingReview) { finishProfile(); return; }
   if (state.view === "review") { state.view = "questionnaire"; state.step = visibleSteps().length - 1; renderApp({ scroll: true }); return; }
   if (state.step > 0) state.step -= 1;
@@ -1504,6 +1575,7 @@ function moveToNextQuestion() {
   state.skipped = state.skipped.filter((value) => value !== step.id);
   if (state.editingReview || state.step >= steps.length - 1) { finishProfile(); return; }
   state.step += 1;
+  state.bridgeChapter = currentStep().chapter !== step.chapter ? currentStep().chapter : null;
   renderApp({ scroll: true });
 }
 
@@ -1519,6 +1591,7 @@ function skipQuestion() {
   state.error = "";
   if (state.editingReview || state.step >= visibleSteps().length - 1) { finishProfile(); return; }
   state.step += 1;
+  state.bridgeChapter = currentStep().chapter !== step.chapter ? currentStep().chapter : null;
   renderApp({ scroll: true });
 }
 
@@ -1804,7 +1877,21 @@ app.addEventListener("click", (event) => {
   const type = control.dataset.type;
   const value = control.dataset.value;
 
-  if (action === "share-app") void shareDemo();
+  if (action === "city-choice") chooseCity(control.dataset.field, value);
+  else if (action === "city-toggle") {
+    const field = document.getElementById(control.dataset.field);
+    if (state.cityMenu?.fieldId === field.id) closeCityMenu();
+    else updateCityMenu(field, true);
+  } else if (action === "number-adjust") {
+    const step = STEPS.find(item => item.id === control.dataset.step);
+    const field = document.getElementById("number-" + step.id);
+    const current = state.answers[step.id];
+    const minimum = step.id === "space" ? 0 : Math.max(1, partySizeFromAnswer() ?? 1);
+    const number = current == null || current === "" || current === "any" ? minimum : Number(current) + Number(control.dataset.delta);
+    setAnswer(step.id, clampNumber(number, minimum, 40));
+    renderApp();
+    app.querySelector('[data-action="number-adjust"][data-step="' + step.id + '"][data-delta="' + control.dataset.delta + '"]')?.focus();
+  } else if (action === "share-app") void shareDemo();
   else if (action === "install-app") void installApp();
   else if (action === "copy-demo-link") {
     copyText(state.modal?.url || demoShareUrl()).then(() => { state.modal = null; renderApp(); showToast(tr("shareCopied")); }).catch(() => document.querySelector("#share-link-value")?.select());
@@ -1927,6 +2014,42 @@ app.addEventListener("click", (event) => {
   }
 });
 
+app.addEventListener("focusin", event => {
+  const field = event.target;
+  if (!["destination-input", "modal-place"].includes(field.id)) return;
+  if (state.cityMenuSuppressed === field.id) { state.cityMenuSuppressed = null; return; }
+  updateCityMenu(field, true);
+});
+
+document.addEventListener("pointerdown", event => {
+  if (!event.target.closest(".destination-picker")) closeCityMenu();
+});
+
+app.addEventListener("keydown", event => {
+  const field = event.target;
+  if (!["destination-input", "modal-place"].includes(field.id)) return;
+  if (event.key === "Escape" || event.key === "Tab") { closeCityMenu(); return; }
+  if (["ArrowDown", "ArrowUp"].includes(event.key)) {
+    event.preventDefault();
+    if (!state.cityMenu) updateCityMenu(field, true);
+    const menu = state.cityMenu;
+    if (!menu.rows.length) return;
+    menu.active = (menu.active + (event.key === "ArrowDown" ? 1 : -1) + menu.rows.length) % menu.rows.length;
+    const options = document.getElementById(field.id + "-options");
+    options.querySelectorAll('[role="option"]').forEach((row, index) => {
+      row.classList.toggle("active", index === menu.active);
+      row.setAttribute("aria-selected", String(index === menu.active));
+    });
+    field.setAttribute("aria-activedescendant", field.id + "-option-" + menu.active);
+    document.getElementById(field.id + "-option-" + menu.active)?.scrollIntoView({ block: "nearest" });
+  } else if (event.key === "Enter") {
+    event.preventDefault();
+    const menu = state.cityMenu;
+    if (menu?.rows.length) chooseCity(field.id, menu.rows[Math.max(0, menu.active)].value);
+    else closeCityMenu();
+  }
+});
+
 app.addEventListener("input", (event) => {
   const field = event.target;
   if (field.id === "destination-input") {
@@ -1935,8 +2058,10 @@ app.addEventListener("input", (event) => {
     state.locationPrefill = "";
     state.locationSuggestion = null;
     document.querySelector("#location-note")?.remove();
+    updateCityMenu(field);
     return;
   }
+  if (field.id === "modal-place") { state.modal.destinationDraft = field.value; updateCityMenu(field); return; }
   if (field.matches("[data-answer-input]")) {
     setAnswer(field.dataset.step, field.value);
     const count = field.closest(".journey-card")?.querySelector(".character-count");
@@ -1965,6 +2090,13 @@ app.addEventListener("input", (event) => {
 
 app.addEventListener("change", (event) => {
   const control = event.target;
+  if (control.matches("[data-size-input]")) {
+    const number = clampNumber(control.value, Number(control.min), Number(control.max));
+    setAnswer(control.dataset.step, number);
+    control.value = number ?? "";
+    updateQuestionReaction();
+    return;
+  }
   if (control.matches("[data-action='essential-features']")) {
     setAnswer("featureRule", control.checked ? "required" : null);
     setAnswer("requiredFeatures", control.checked ? [...(state.answers.mustHaves ?? [])] : []);

@@ -886,6 +886,16 @@ export function domReply(stepId, answers, locale = "en") {
   const language = Object.hasOwn(REPLIES, locale) ? locale : "en";
   const copy = REPLIES[language];
 
+  if (stepId === "space" && String(answer) === "0" && ["home", "household"].includes(values.goal)) {
+    return {
+      en: "A studio. One room, plenty of little corners to make yours.",
+      ro: "O garsonieră. O cameră, multe colțuri numai ale tale.",
+      es: "Un estudio. Una habitación, muchos rincones para ti.",
+      fr: "Un studio. Une pièce, plein de petits coins à toi.",
+      de: "Ein Studio. Ein Raum, viele kleine Ecken für dich.",
+    }[language];
+  }
+
   if (stepId === "offerType") return copy.offerType[answer] ?? copy.open;
   if (values.goal === "offer" && Object.hasOwn(copy.offer, stepId)) {
     const replies = copy.offer[stepId];

@@ -26,17 +26,21 @@ const SKIP_VALUES = new Set(["", "any", "unsure", "not-sure", "flexible", "discu
 
 export function questionIdsFor(answers = {}) {
   const goal = answers?.goal;
+  let questionIds;
   if (goal === "offer") {
     const roomOffer = answers.offerType === "room";
-    return [
+    questionIds = [
       "goal",
       ...OFFER_BASE_QUESTIONS,
       ...(roomOffer ? OFFER_ROOM_QUESTIONS : []),
       ...OFFER_END_QUESTIONS,
     ];
+  } else {
+    const path = QUESTION_PATHS[goal];
+    questionIds = path ? ["goal", ...path] : ["goal"];
   }
-  const path = QUESTION_PATHS[goal];
-  return path ? ["goal", ...path] : ["goal"];
+  const hasIntroduction = typeof answers?.intro === "string" && answers.intro.trim().length > 0;
+  return questionIds.filter((id) => id !== "visibility" || hasIntroduction);
 }
 
 // The UI can use this list to retain answers for the current path and drop stale branch answers.

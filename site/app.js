@@ -524,6 +524,7 @@ function partySizeFromAnswer() {
 function setAnswer(key, value) {
   if (value == null || value === "" || (Array.isArray(value) && value.length === 0)) delete state.answers[key];
   else state.answers[key] = value;
+  if (key === "intro" && !String(value ?? "").trim()) delete state.answers.visibility;
   if (key === "moveDate") state.answers.moveDateRecordedAt = new Date().toISOString().slice(0, 10);
   if (key === "party" && state.answers.householdSize !== "any" && Number(state.answers.householdSize) < (partySizeFromAnswer() ?? 1)) delete state.answers.householdSize;
   state.skipped = state.skipped.filter((item) => item !== key);
@@ -798,6 +799,11 @@ function updateQuestionReaction() {
   const reaction = questionReaction(step);
   reactionElement.textContent = reaction;
   reactionElement.hidden = !reaction;
+  const steps = visibleSteps();
+  const nextButton = app.querySelector('[data-action="step-next"]');
+  if (nextButton) nextButton.innerHTML = escapeHtml(step.id !== "goal" && state.step === steps.length - 1 ? localized(flowText.reviewAction) : tr("next")) + icon("arrow", 18);
+  const progress = app.querySelector(".top-progress");
+  if (progress) progress.max = steps.length;
   const dom = app.querySelector(".question-dom");
   if (dom && reaction) {
     dom.classList.remove("is-reacting");
@@ -1506,11 +1512,12 @@ function skipQuestion() {
   const step = currentStep();
   if (["goal", "offerType"].includes(step.id)) return;
   delete state.answers[step.id];
+  if (step.id === "intro") delete state.answers.visibility;
   if (step.id === "moveDate") delete state.answers.moveDateRecordedAt;
   if (step.id === "mustHaves") { delete state.answers.requiredFeatures; delete state.answers.featureRule; }
   if (!state.skipped.includes(step.id)) state.skipped.push(step.id);
   state.error = "";
-  if (state.step >= steps.length - 1) { finishProfile(); return; }
+  if (state.editingReview || state.step >= visibleSteps().length - 1) { finishProfile(); return; }
   state.step += 1;
   renderApp({ scroll: true });
 }

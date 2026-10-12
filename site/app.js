@@ -1,4 +1,6 @@
 import { localeWords, translateText } from "./locales.js";
+import { questionIdsFor, activeAnswerKeys, homeFit, personFit, rentBasisFor } from "./search-logic.js";
+import { domReply } from "./dom-replies.js";
 
 const DEMO_MODE = new URLSearchParams(window.location.search).get("demo") === "1";
 const STORAGE_KEY = "domi-product-preview-v1";
@@ -185,7 +187,30 @@ function icon(name, size = 20, extra = "") {
 const question = (id, chapter, type, prompt, description, helper, options = []) => ({ id, chapter, type, prompt, description, helper, options });
 const option = (value, iconName, title, description = STRINGS("", "", "")) => ({ value, icon: iconName, title, description });
 
+const FIVE = (en, ro, es, fr, de) => ({ en, ro, es, fr, de });
+const flowText = {
+  review: FIVE("Does this look right?", "Arată bine așa?", "¿Está bien así?", "Ça te convient ?", "Passt das so?"),
+  reviewAction: FIVE("Review", "Verifică", "Revisar", "Vérifier", "Prüfen"),
+  offerReview: FIVE("Your space, ready to describe", "Locul tău, gata de prezentat", "Tu espacio, listo para presentar", "Ton logement, prêt à présenter", "Dein Zuhause, bereit zum Vorstellen"),
+  homes: FIVE("Find homes", "Găsește locuințe", "Buscar viviendas", "Trouver un logement", "Wohnungen finden"),
+  people: FIVE("Find people", "Găsește oameni", "Buscar personas", "Trouver des personnes", "Menschen finden"),
+  offerType: FIVE("What space are you offering?", "Ce spațiu oferi?", "¿Qué espacio ofreces?", "Quel espace proposes-tu ?", "Welchen Wohnraum bietest du an?"),
+  offerRent: FIVE("What is the monthly rent for this space?", "Care este chiria lunară pentru acest spațiu?", "¿Cuál es el alquiler mensual de este espacio?", "Quel est le loyer mensuel de cet espace ?", "Wie hoch ist die Monatsmiete für diesen Wohnraum?"),
+  available: FIVE("When could someone move in?", "Când s-ar putea muta cineva?", "¿Cuándo podría mudarse alguien?", "Quand pourrait-on emménager ?", "Wann könnte jemand einziehen?"),
+  offerStay: FIVE("How long could someone stay?", "Cât timp ar putea rămâne cineva?", "¿Cuánto tiempo podría quedarse alguien?", "Combien de temps pourrait-on rester ?", "Wie lange könnte jemand bleiben?"),
+  offerIntro: FIVE("What makes your place feel like home?", "Ce face locul tău să se simtă ca acasă?", "¿Qué hace acogedor tu espacio?", "Qu'est-ce qui rend ton logement accueillant ?", "Was macht deinen Wohnraum gemütlich?"),
+  rentTotal: FIVE("What monthly rent works for the whole home?", "Ce chirie lunară vi se potrivește pentru întreaga locuință?", "¿Qué alquiler mensual os encaja para toda la vivienda?", "Quel loyer mensuel convient pour le logement entier ?", "Welche Monatsmiete passt für die ganze Wohnung?"),
+  limitTotal: FIVE("What is your limit for the whole home?", "Care este limita pentru întreaga locuință?", "¿Cuál es vuestro límite para toda la vivienda?", "Quelle est ta limite pour le logement entier ?", "Was ist deine Obergrenze für die ganze Wohnung?"),
+  details: FIVE("Your plans", "Planurile tale", "Tus planes", "Tes projets", "Deine Pläne"),
+  life: FIVE("Life at home", "Viața acasă", "La vida en casa", "La vie à la maison", "Das Leben zu Hause"),
+  private: FIVE("Saved on this device. Nothing is published.", "Salvat pe acest dispozitiv. Nimic nu este publicat.", "Guardado en este dispositivo. No se publica nada.", "Enregistré sur cet appareil. Rien n'est publié.", "Auf diesem Gerät gespeichert. Es wird nichts veröffentlicht."),
+};
 const STEPS = [
+  question("offerType", 0, "single", flowText.offerType, STRINGS("", "", ""), STRINGS("", "", ""), [
+    option("room", "bed", FIVE("A room", "O cameră", "Una habitación", "Une chambre", "Ein Zimmer")),
+    option("whole-home", "home", FIVE("A whole home", "O locuință întreagă", "Una vivienda entera", "Un logement entier", "Eine ganze Wohnung")),
+  ]),
+  question("offerRent", 1, "money", flowText.offerRent, STRINGS("", "", ""), STRINGS("", "", "")),
   question("goal", 0, "single", STRINGS("What are you hoping to find?", "Ce speri să găsești?", "¿Qué estás buscando?"), STRINGS("This gives your search a direction. You can still explore everything.", "Răspunsul dă o direcție căutării. Poți explora în continuare toate opțiunile.", "La respuesta da una dirección a tu búsqueda. Puedes explorar todas las opciones."), STRINGS("We use this to bring the most relevant next step closer.", "Folosim răspunsul pentru a-ți arăta mai întâi ce te ajută.", "Usamos esta respuesta para acercarte el siguiente paso más útil."), [
     option("room", "bed", STRINGS("A room for me", "O cameră pentru mine", "Una habitación para mí"), STRINGS("I’d like to join a household.", "Aș vrea să mă alătur unei gospodării.", "Quiero unirme a un hogar compartido.")),
     option("home", "home", STRINGS("A home to share", "O locuință de împărțit", "Una vivienda para compartir"), STRINGS("Find a home and build a household around it.", "Găsește o locuință și construiți împreună o gospodărie.", "Encuentra una vivienda y cread juntos un hogar compartido.")),
@@ -276,7 +301,7 @@ const STEPS = [
   question("visibility", 3, "single", STRINGS("Who can see your introduction?", "Cine îți poate vedea prezentarea?", "¿Quién puede ver tu presentación?"), STRINGS("You control when a profile becomes visible.", "Tu decizi când devine vizibil profilul.", "Tú decides cuándo hacer visible tu perfil."), STRINGS("This preview never publishes a profile. In a real service, sharing would need a separate confirmation.", "Această previzualizare nu publică profilul. În produsul real, afișarea ar necesita confirmarea ta.", "Esta vista previa no publica tu perfil. En el servicio real, compartirlo requeriría tu confirmación."), [
     option("private", "shield", STRINGS("Keep it private", "Păstrează-l privat", "Mantener privado"), STRINGS("Only I can see it for now.", "Deocamdată îl văd doar eu.", "Por ahora solo lo veo yo.")),
     option("intro-only", "message", STRINGS("Share when I start a conversation", "Îl împărtășesc când încep o discuție", "Compartirlo al iniciar una conversación"), STRINGS("I’ll decide each time.", "Decid de fiecare dată.", "Decidiré cada vez.")),
-    option("visible", "eye", STRINGS("Show me to nearby searches", "Afișează-mă în căutările din zonă", "Mostrarme en búsquedas cercanas"), STRINGS("I’m ready for my profile to be discoverable.", "Sunt gata ca profilul să poată fi găsit.", "Quiero que puedan encontrar mi perfil.")),
+    option("visible", "eye", FIVE("Prepare a discoverable profile", "Pregătește un profil vizibil", "Preparar un perfil visible", "Préparer un profil visible", "Ein sichtbares Profil vorbereiten"), STRINGS("I’m ready for my profile to be discoverable.", "Sunt gata ca profilul să poată fi găsit.", "Quiero que puedan encontrar mi perfil.")),
   ]),
 ];
 
@@ -301,13 +326,16 @@ const savedState = DEMO_MODE ? null : readSavedState();
 const state = {
   locale: !DEMO_MODE && APP_LANGUAGES.includes(savedState?.locale) ? savedState.locale : initialLocale(),
   localeManuallySet: !DEMO_MODE && APP_LANGUAGES.includes(savedState?.locale) && (typeof savedState?.localeManuallySet === "boolean" ? savedState.localeManuallySet : true),
-  view: DEMO_MODE ? "welcome" : ["welcome", "questionnaire", "results", "detail-home", "detail-person", "together", "saved", "you"].includes(savedState?.view) ? savedState.view : "welcome",
+  view: DEMO_MODE ? "welcome" : ["welcome", "questionnaire", "review", "results", "detail-home", "detail-person", "together", "saved", "you"].includes(savedState?.view) ? savedState.view : "welcome",
   tab: DEMO_MODE ? "homes" : ["homes", "people", "together", "saved", "you"].includes(savedState?.tab) ? savedState.tab : "homes",
   place: typeof savedState?.place === "string" ? savedState.place : "",
   destinationEdited: Boolean(savedState?.place),
+  destinationDraft: null,
   locationPrefill: "",
   locationSuggestion: null,
   answers: DEMO_MODE ? {} : savedState?.answers && typeof savedState.answers === "object" ? savedState.answers : {},
+  onboardingComplete: !DEMO_MODE && savedState?.onboardingComplete === true,
+  editingReview: false,
   skipped: DEMO_MODE ? [] : Array.isArray(savedState?.skipped) ? savedState.skipped : [],
   step: DEMO_MODE ? 0 : Number.isInteger(savedState?.step) ? Math.max(0, Math.min(STEPS.length - 1, savedState.step)) : 0,
   savedHomes: DEMO_MODE ? [] : Array.isArray(savedState?.savedHomes) ? savedState.savedHomes : [],
@@ -330,11 +358,20 @@ const state = {
   error: "",
 };
 
+if (savedState?.questionId) {
+  const resumeIndex = visibleSteps().findIndex(step => step.id === savedState.questionId);
+  if (resumeIndex >= 0) state.step = resumeIndex;
+}
+if (savedState && savedState.questionFlowVersion !== 2 && state.answers.goal === "home") {
+  // Earlier shared-home drafts treated these as a personal room budget.
+  for (const key of ["comfortableRent", "privateCeiling", "upfrontFunds"]) delete state.answers[key];
+}
+
 function persist() {
   if (DEMO_MODE) return;
   const saved = {
     locale: state.locale, localeManuallySet: state.localeManuallySet, view: state.view, tab: state.tab, place: state.place,
-    answers: state.answers, skipped: state.skipped, step: state.step,
+    answers: state.answers, skipped: state.skipped, step: state.step, questionId: currentStep()?.id, questionFlowVersion: 2, onboardingComplete: state.onboardingComplete,
     savedHomes: state.savedHomes, savedPeople: state.savedPeople,
     hiddenHomes: state.hiddenHomes, hiddenPeople: state.hiddenPeople,
     signals: state.signals, group: state.group, inviteDraft: state.inviteDraft,
@@ -424,7 +461,7 @@ function canonicalCity(value) {
   const key = placeKey(value).replace(/[^\p{L}\p{N}\s-]/gu, "").replace(/\s+/g, " ").trim();
   const aliases = {
     "bucuresti": "bucharest", "bucharest": "bucharest", "nyc": "new york", "new york city": "new york",
-    "chisinau": "chisinau", "kishinev": "chisinau", "durlesti": "durlesti", "balti": "balti",
+    "chisinau": "chisinau", "kishinev": "chisinau", "kishineu": "chisinau", "durlesti": "durlesti", "balti": "balti",
   };
   return aliases[key] ?? key;
 }
@@ -475,14 +512,7 @@ function stepLabel(value) {
 }
 
 function visibleSteps() {
-  const goal = state.answers.goal;
-  return STEPS.filter((step) => {
-    if (step.id === "space" && (goal === "offer" || (goal === "people" && state.tab !== "homes"))) return false;
-    if (step.id === "householdSize" && goal !== "home") return false;
-    if (["intro", "visibility"].includes(step.id) && goal !== "people") return false;
-    if (["comfortableRent", "privateCeiling", "upfrontFunds"].includes(step.id) && ["offer", "people"].includes(goal)) return false;
-    return true;
-  });
+  return questionIdsFor(state.answers).map(id => STEPS.find(step => step.id === id)).filter(Boolean);
 }
 
 function currentStep() { return visibleSteps()[state.step] ?? visibleSteps().at(-1); }
@@ -494,16 +524,18 @@ function partySizeFromAnswer() {
 function setAnswer(key, value) {
   if (value == null || value === "" || (Array.isArray(value) && value.length === 0)) delete state.answers[key];
   else state.answers[key] = value;
+  if (key === "moveDate") state.answers.moveDateRecordedAt = new Date().toISOString().slice(0, 10);
+  if (key === "party" && state.answers.householdSize !== "any" && Number(state.answers.householdSize) < (partySizeFromAnswer() ?? 1)) delete state.answers.householdSize;
   state.skipped = state.skipped.filter((item) => item !== key);
   persist();
 }
 
 function answerComplete(step) {
   const value = state.answers[step.id];
-  if (step.type === "money") return value?.amount !== "" && value?.amount != null && Number.isFinite(Number(value.amount)) && Boolean(value?.currency);
+  if (step.type === "money") return value?.amount !== "" && value?.amount != null && Number.isFinite(Number(value.amount)) && Number(value.amount) >= 0 && Boolean(value?.currency);
   if (step.type === "intro") return typeof value === "string" && value.trim().length > 0;
   if (step.id === "householdSize") return value === "any" || (value !== "" && value != null && Number.isInteger(Number(value)) && Number(value) >= Math.max(1, partySizeFromAnswer() ?? 1));
-  if (step.id === "space" && ["home", "household"].includes(state.answers.goal)) return value === "any" || (value !== "" && value != null && Number.isInteger(Number(value)) && Number(value) >= 0);
+  if (step.id === "space" && ["home", "household"].includes(state.answers.goal)) return value === "any" || (value !== "" && value != null && Number.isInteger(Number(value)) && Number(value) >= 1);
   if (step.id === "upfrontFunds") {
     if (!value || value.amount === "" || value.amount == null) return true;
     return Number.isFinite(Number(value.amount)) && Number(value.amount) >= 0 && Boolean(value.currency) && ["personal-share", "whole-home"].includes(value.basis);
@@ -565,80 +597,36 @@ function personCityMatch(person, place) {
   return homeCityMatch(person, place);
 }
 
-function searchRentBasis() {
-  return state.answers.goal === "household" ? "whole-home" : "room";
-}
+function searchRentBasis() { return rentBasisFor(state.answers); }
 
 function sortVisibleHomes(place) {
-  let rows = homes.filter((home) => homeCityMatch(home, place));
-  if (state.filterType !== "all") rows = rows.filter((home) => home.rentBasis === state.filterType);
-  rows = rows.filter((home) => !state.hiddenHomes[home.id]);
-  const answers = state.answers;
-  const minimumBedrooms = answers.space;
-  if (answers.goal === "household" && minimumBedrooms !== "" && minimumBedrooms != null && minimumBedrooms !== "any" && Number.isInteger(Number(minimumBedrooms))) {
-    rows = rows.filter(home => home.bedrooms == null || home.bedrooms >= Number(minimumBedrooms));
-  }
-  const comfortable = answers.comfortableRent;
-  const ceiling = answers.privateCeiling;
-  const budgetBasis = searchRentBasis();
-  if (ceiling?.amount !== "" && ceiling?.amount != null && Number.isFinite(Number(ceiling.amount))) {
-    rows = rows.filter((home) => home.rentBasis !== budgetBasis || home.currency !== ceiling.currency || home.monthlyRent == null || home.monthlyRent <= Number(ceiling.amount));
-  }
-  const preferredCurrency = comfortable?.currency;
-  rows.sort((a, b) => scoreHome(b, comfortable, preferredCurrency, budgetBasis) - scoreHome(a, comfortable, preferredCurrency, budgetBasis));
-  return rows;
+  const scored = homes.filter(home => homeCityMatch(home, place) && !state.hiddenHomes[home.id])
+    .filter(home => state.filterType === "all" || home.rentBasis === state.filterType || home.rentBasis === "unknown")
+    .map(home => ({ home, fit: homeFit(home, matchingAnswers()) }))
+    .filter(item => !item.fit.excluded);
+  scored.sort((a, b) => scoreHome(b.home) - scoreHome(a.home));
+  return scored.map(item => item.home);
 }
 
-function scoreHome(home, comfortable, preferredCurrency, budgetBasis) {
-  let score = 0;
-  if (state.answers.space && home.rentBasis === budgetBasis) score += 8;
-  if (comfortable?.amount !== "" && comfortable?.amount != null && home.rentBasis === budgetBasis && home.currency === preferredCurrency && home.monthlyRent != null) {
-    const ratio = home.monthlyRent / Number(comfortable.amount);
-    if (Number(comfortable.amount) === 0) score -= home.monthlyRent === 0 ? 0 : 8;
-    else if (ratio <= 1) score += 12 - ratio * 4;
-    else score -= Math.min(8, (ratio - 1) * 7);
-  }
-  for (const signal of state.signals) {
-    if (signal.kind === "hide" && signal.itemId === home.id) score -= 40;
-    if (signal.kind === "save" && signal.itemType === "home" && signal.itemId !== home.id) {
-      const savedHome = homes.find((item) => item.id === signal.itemId);
-      if (savedHome?.rentBasis === home.rentBasis) score += 1;
-      const likedFeatures = savedHome?.features ?? [];
-      score += home.features.filter((feature) => likedFeatures.includes(feature)).length * 2;
-    }
+function scoreHome(home) {
+  let score = homeFit(home, matchingAnswers()).score;
+  for (const id of state.savedHomes) {
+    const savedHome = homes.find(item => item.id === id);
+    if (savedHome && id !== home.id) score += home.features.filter(feature => savedHome.features.includes(feature)).length;
   }
   return score;
 }
 
 function sortVisiblePeople(place) {
-  const rows = people.filter((person) => personCityMatch(person, place) && !state.hiddenPeople[person.id]);
-  return rows.sort((a, b) => scorePerson(b) - scorePerson(a));
+  return people.filter(person => personCityMatch(person, place) && !state.hiddenPeople[person.id] && !personFit(person, matchingAnswers()).excluded)
+    .sort((a, b) => scorePerson(b) - scorePerson(a));
 }
 
-function scorePerson(person) {
-  let score = 0;
-  const answer = state.answers;
-  if (answer.quiet && person.quiet && person.quiet.toLowerCase().includes(answer.quiet.replace("mornings", "morning").replace("evenings", "evening"))) score += 2;
-  if (answer.cleaning && person.cleaning && person.cleaning.toLowerCase().includes(answer.cleaning.split("-").at(-1))) score += 2;
-  if (answer.moveDate && person.moveIn && /flexible/i.test(person.moveIn) && answer.moveDate === "flexible") score += 1;
-  for (const key of ["smoking", "pets", "guests", "workHome"]) {
-    if (answer[key] && person[key] && !["discuss", "unknown", "flexible"].includes(person[key]) && answer[key] === person[key]) score += 2;
-  }
-  const languageCode = value => ({ english: "en", romanian: "ro", română: "ro", spanish: "es", español: "es", french: "fr", german: "de" })[String(value).toLowerCase()] ?? String(value).toLowerCase();
-  const spoken = new Set((person.languages ?? []).map(languageCode));
-  if (Array.isArray(answer.languages)) score += answer.languages.filter(value => spoken.has(languageCode(value))).length * 2;
-  if (person.isExample) score += 0;
-  for (const signal of state.signals) {
-    if (signal.kind === "hide" && signal.itemType === "person" && signal.itemId === person.id) score -= 40;
-    if (signal.kind === "save" && signal.itemType === "person" && signal.itemId !== person.id) {
-      const savedPerson = people.find(item => item.id === signal.itemId);
-      for (const key of ["quiet", "cleaning", "smoking", "pets", "guests", "workHome"]) {
-        if (savedPerson?.[key] && !["discuss", "unknown", "flexible"].includes(savedPerson[key]) && savedPerson[key] === person[key]) score += 1;
-      }
-    }
-  }
-  return score;
+function matchingAnswers() {
+  return { ...state.answers, place: state.place, asOfDate: state.answers.moveDateRecordedAt };
 }
+
+function scorePerson(person) { return personFit(person, matchingAnswers()).score; }
 
 function citySuggestions() {
   const unique = new Map();
@@ -706,18 +694,18 @@ function headerActions() {
 }
 
 function brandHeader() {
-  const progress = state.view === "questionnaire";
+  const progress = ["questionnaire", "review"].includes(state.view);
   if (progress) {
     const steps = visibleSteps();
     const current = Math.min(state.step, steps.length - 1);
     return `<header class="topbar journey-topbar">
       <button class="icon-button" type="button" data-action="step-back" aria-label="${escapeAttr(tr("back"))}">${icon("back", 22)}</button>
-      <progress class="top-progress" value="${current + 1}" max="${steps.length}" aria-label="${escapeAttr(tr("stepOf"))}"></progress>
+      <progress class="top-progress" value="${state.view === "review" ? steps.length : current}" max="${steps.length}" aria-label="${escapeAttr(tr("stepOf"))}"></progress>
       ${languagePicker()}
       <button class="journey-exit icon-button" type="button" data-action="leave-profile" aria-label="${escapeAttr(tr("backToResults"))}">${icon("close", 18)}</button>
     </header>`;
   }
-  const showPlace = !["welcome", "questionnaire"].includes(state.view) && state.place;
+  const showPlace = !["welcome", "questionnaire", "review"].includes(state.view) && state.place;
   return `<header class="topbar${showPlace ? " topbar-with-place" : ""}">
     <a class="brand-home" href="/" data-action="brand-home" aria-label="Domi home"><img class="brand-symbol" src="/brand/logo.png" alt=""><img class="brand-wordmark" src="/brand/wordmark.png" alt="Domi"></a>
     ${showPlace ? `<button type="button" class="place-pill" data-action="change-place">${icon("pin", 16)}<span>${escapeHtml(state.place)}</span>${icon("pencil", 14)}</button>` : ""}
@@ -731,7 +719,7 @@ function footerLandscape() {
 
 function welcomeScreen() {
   const options = citySuggestions().slice(0, 80).map((place) => `<option value="${escapeAttr(place)}"></option>`).join("");
-  const placeValue = state.place || state.locationPrefill;
+  const placeValue = state.destinationDraft ?? (state.place || state.locationPrefill);
   const locationDescription = state.locationPrefill && !state.place
     ? `aria-description="${escapeAttr(STRINGS("Approximate location. You can change it anytime.", "Locație aproximativă. O poți schimba oricând.", "Ubicación aproximada. Puedes cambiarla cuando quieras.")[state.locale])}"`
     : "";
@@ -742,7 +730,7 @@ function welcomeScreen() {
         <label class="sr-only" for="destination-input">${escapeHtml(tr("destination"))}</label>
         <div class="search-input-wrap">${icon("pin", 20)}<input class="search-input" id="destination-input" name="place" list="city-options" value="${escapeAttr(placeValue)}" placeholder="${escapeAttr(tr("cityPlaceholder"))}" autocomplete="address-level2" aria-describedby="search-error" ${locationDescription} required><datalist id="city-options">${options}</datalist></div>
       </div>
-      <div class="dom-button-wrap"><img class="dom-button-peek" src="/assets/dom-button.png" alt="" aria-hidden="true"><button class="primary-button search-button" type="submit">${escapeHtml(tr("search"))}${icon("arrow", 19)}</button></div>
+      <div class="dom-button-wrap"><img class="dom-button-peek" src="/assets/dom-button.png" alt="" aria-hidden="true"><button class="primary-button search-button" type="submit">${escapeHtml(tr("next"))}${icon("arrow", 19)}</button></div>
       ${state.error ? `<p class="inline-error search-error" id="search-error" role="alert">${escapeHtml(state.error)}</p>` : `<span class="sr-only" id="search-error"></span>`}
     </form>
   </main>`;
@@ -758,6 +746,13 @@ function chapterTitle(step) {
 
 function questionCopy(step) {
   const goal = state.answers.goal;
+  if (step.id === "offerType" || step.id === "offerRent") return [localized(step.prompt)];
+  if (goal === "offer" && step.id === "moveDate") return [localized(flowText.available)];
+  if (goal === "offer" && step.id === "stayLength") return [localized(flowText.offerStay)];
+  if (goal === "offer" && step.id === "intro") return [localized(flowText.offerIntro)];
+  if (step.id === "visibility") return [localized(FIVE("How would you like to share it?", "Cum ai vrea să o împărtășești?", "¿Cómo te gustaría compartirla?", "Comment aimerais-tu la partager ?", "Wie möchtest du es teilen?"))];
+  if (["home", "household"].includes(goal) && step.id === "comfortableRent") return [localized(flowText.rentTotal)];
+  if (["home", "household"].includes(goal) && step.id === "privateCeiling") return [localized(flowText.limitTotal)];
   const titles = {
     goal: STRINGS("What are you hoping to find?", "Ce cauți acum?", "¿Qué buscas ahora?"),
     space: ["home", "household"].includes(goal)
@@ -792,51 +787,8 @@ function questionCopy(step) {
 }
 
 function questionReaction(step) {
-  const answer = state.answers[step.id];
-  if (step.type === "upfront" && (!answer || answer.amount === "" || !answer.currency || !answer.basis)) return "";
-  if (step.type === "money" && !answerComplete(step)) return "";
-  if (step.type === "text" && !String(answer ?? "").trim()) return "";
-  if (step.type === "intro" && !String(answer ?? "").trim()) return "";
-  if (step.type === "multi" && (!Array.isArray(answer) || !answer.length)) return "";
-  if (!answerComplete(step)) return "";
-
-  if (answer === "any" || answer === "unsure" || answer === "not-sure" || answer === "flexible") {
-    return STRINGS("No rush. We can leave that open.", "Nu e grabă. Putem lăsa răspunsul deschis.", "Sin prisa. Podemos dejarlo abierto.")[state.locale];
-  }
-
-  if (step.id === "goal") {
-    const messages = {
-      room: STRINGS("Let’s start with rooms you can browse.", "Începem cu camerele pe care le poți explora.", "Empecemos por las habitaciones que puedes explorar."),
-      home: STRINGS("We’ll look for a whole home to shape together.", "Căutăm o locuință întreagă pe care să o pregătiți împreună.", "Buscaremos una vivienda entera para preparar juntos."),
-      people: STRINGS("People first. Homes are still one tap away.", "Începem cu oamenii. Locuințele sunt la un singur pas.", "Primero las personas. Las viviendas siguen a un toque."),
-      household: STRINGS("We’ll compare the rent for the whole home.", "Vom compara chiria întregii locuințe.", "Compararemos el alquiler de toda la vivienda."),
-      offer: STRINGS("Got it. This is separate from your renter search.", "Am înțeles. Această opțiune rămâne separată de căutarea ta ca chiriaș.", "Entendido. Esta opción queda separada de tu búsqueda como inquilino."),
-    };
-    return localized(messages[answer]);
-  }
-  if (step.id === "areas") return STRINGS("I’ll focus on the areas you choose.", "Mă voi concentra pe zonele alese de tine.", "Me centraré en las zonas que elijas.")[state.locale];
-  if (step.id === "comfortableRent" || step.id === "privateCeiling") {
-    return STRINGS("I’ll keep this private and in {currency}.", "Păstrez suma privată și în {currency}.", "Mantendré la cantidad privada y en {currency}.")[state.locale].replace("{currency}", answer.currency);
-  }
-  if (step.id === "upfrontFunds") return STRINGS("I’ll keep this private and separate from monthly rent.", "Păstrez suma privată și separată de chiria lunară.", "Mantendré esta cantidad privada y separada del alquiler mensual.")[state.locale];
-  const replies = {
-    space: STRINGS("A little corner to call your own.", "Un colțușor numai al tău.", "Un rincón para ti."),
-    party: STRINGS("One moving group, one step at a time.", "Un grup care se mută, pas cu pas.", "Un grupo que se muda, paso a paso."),
-    householdSize: STRINGS("Room for everyone on your list.", "Loc pentru toți cei din planul tău.", "Sitio para todos los que tienes en mente."),
-    moveDate: STRINGS("A rough window is plenty.", "O perioadă aproximativă e de ajuns.", "Con una fecha aproximada basta."),
-    stayLength: STRINGS("A home can start with a season.", "Un cămin poate începe cu un anotimp.", "Un hogar puede empezar con una temporada."),
-    quiet: STRINGS("A little quiet goes a long way.", "Puțină liniște face mult bine.", "Un poco de calma ayuda mucho."),
-    workHome: STRINGS("Room for a desk and a deep breath.", "Loc pentru un birou și un pic de răgaz.", "Un rincón para trabajar y respirar."),
-    smoking: STRINGS("Clear expectations make a home feel easier.", "Așteptările clare fac casa mai primitoare.", "Las expectativas claras hacen más fácil convivir."),
-    pets: STRINGS("Paws belong in the plan.", "Și lăbuțele intră în plan.", "Las patitas también cuentan."),
-    guests: STRINGS("A good hello starts at the door.", "O primire frumoasă începe la ușă.", "Un buen saludo empieza en la puerta."),
-    cleaning: STRINGS("Even little homes need a tidy-up.", "Și căsuțele au nevoie de ordine.", "Hasta los hogares pequeños necesitan orden."),
-    languages: STRINGS("More ways to say hello.", "Mai multe feluri de a spune salut.", "Más formas de decir hola."),
-    mustHaves: STRINGS("We’ll look for details the source confirms.", "Căutăm dotările confirmate de sursă.", "Buscaremos detalles confirmados por la fuente."),
-    intro: STRINGS("A small hello is enough.", "Un salut scurt e de ajuns.", "Un pequeño saludo es suficiente."),
-    visibility: STRINGS("You choose who sees this.", "Tu alegi cine vede prezentarea.", "Tú eliges quién puede verla."),
-  };
-  return localized(replies[step.id]) || STRINGS("I’ll keep this as your private preference.", "Păstrez acest răspuns ca preferință privată.", "Guardaré esto como una preferencia privada.")[state.locale];
+  if (!hasRecordedAnswer(step)) return "";
+  return domReply(step.id, state.answers, state.locale);
 }
 
 function updateQuestionReaction() {
@@ -883,7 +835,7 @@ function renderNumericPreference(step, bedrooms = false) {
   const unit = bedrooms
     ? STRINGS("bedrooms", "dormitoare", "dormitorios")[state.locale]
     : STRINGS("people", "persoane", "personas")[state.locale];
-  const min = bedrooms ? 0 : Math.max(1, partySizeFromAnswer() ?? 1);
+  const min = bedrooms ? 1 : Math.max(1, partySizeFromAnswer() ?? 1);
   return `<div class="numeric-choice ${noPreference ? "no-preference" : ""}"><label class="small-field-label" for="number-${step.id}">${escapeHtml(label)}</label><div class="numeric-field-wrap"><input class="number-field" type="number" id="number-${step.id}" min="${min}" ${bedrooms ? "" : "step=1"} inputmode="numeric" value="${noPreference ? "" : escapeAttr(value)}" data-size-input data-step="${step.id}" ${noPreference ? "disabled" : ""}><span>${escapeHtml(unit)}</span></div><button class="choice-card no-preference-option ${noPreference ? "selected" : ""}" type="button" data-action="answer-choice" data-step="${step.id}" data-value="any" role="radio" aria-checked="${noPreference}"><span class="choice-icon">${icon("sparkle", 19)}</span><span class="choice-copy"><strong>${escapeHtml(STRINGS("No fixed number", "Fără un număr fix", "Sin una cifra fija")[state.locale])}</strong></span><span class="choice-check">${noPreference ? icon("check", 14) : ""}</span></button></div>`;
 }
 
@@ -892,7 +844,7 @@ function renderMoney(step) {
   const currencyOptions = `${saved.currency ? "" : `<option value="" selected>${escapeHtml(tr("moneyNoCurrency"))}</option>`}${currencyChoices().map((currency) => `<option value="${currency}" ${saved.currency === currency ? "selected" : ""}>${currency}</option>`).join("")}`;
   const hasAmount = saved.amount !== "" && saved.amount != null;
   return `<div class="money-form">
-    <label class="small-field-label" for="money-${step.id}">${escapeHtml(state.answers.goal === "household" ? tr("wholeCost") : tr("privateRent"))}</label>
+    <label class="small-field-label" for="money-${step.id}">${escapeHtml(["home", "household"].includes(state.answers.goal) || (step.id === "offerRent" && state.answers.offerType === "whole-home") ? tr("wholeCost") : tr("privateRent"))}</label>
     <div class="money-input-wrap"><span class="money-symbol">${escapeHtml(saved.currency)}</span><input class="money-field" type="number" min="0" step="any" inputmode="decimal" id="money-${step.id}" value="${escapeAttr(saved.amount)}" placeholder="" data-money-input data-step="${step.id}" aria-label="${escapeAttr(tr("priceLabel"))}"><select class="currency-select" data-action="change-currency" data-step="${step.id}" aria-label="${escapeAttr(tr("moneyNoCurrency"))}">${currencyOptions}</select></div>
     <p class="optional-label">${icon("shield", 12)} ${escapeHtml(STRINGS("Only for you", "Doar pentru tine", "Solo para ti")[state.locale])}</p>
     ${hasAmount && destinationCurrency() && saved.currency && saved.currency !== destinationCurrency() ? `<p class="currency-note">${icon("info", 14)}${escapeHtml(STRINGS(`Your answer remains in ${saved.currency}. It is not converted and will not be compared with ${destinationCurrency()} listings.`, `Răspunsul rămâne în ${saved.currency}. Nu îl convertim și nu îl comparăm cu anunțurile în ${destinationCurrency()}.`, `Tu respuesta sigue en ${saved.currency}. No se convierte ni se compara con anuncios en ${destinationCurrency()}.`)[state.locale])}</p>` : ""}
@@ -918,13 +870,20 @@ function renderStepInput(step) {
   if (step.id === "space" && ["home", "household"].includes(state.answers.goal)) return renderNumericPreference(step, true);
   if (step.type === "upfront") return renderUpfrontFunds();
   if (step.type === "single") return renderChoice(step);
-  if (step.type === "multi") return renderChoice(step, true);
+  if (step.type === "multi") {
+    const choices = renderChoice(step, true);
+    if (step.id !== "mustHaves") return choices;
+    const essential = state.answers.featureRule === "required";
+    const label = FIVE("These are essential", "Acestea sunt esențiale", "Son imprescindibles", "C'est indispensable", "Das ist unverzichtbar");
+    return `${choices}<label class="feature-rule"><input type="checkbox" data-action="essential-features" ${essential ? "checked" : ""}>${escapeHtml(localized(label))}</label>`;
+  }
   if (step.type === "money") return renderMoney(step);
   if (step.type === "text") {
-    return `<label class="sr-only" for="answer-${step.id}">${escapeHtml(localized(step.prompt))}</label><textarea class="textarea-field" id="answer-${step.id}" data-answer-input data-step="${step.id}" maxlength="160" placeholder="${escapeAttr(STRINGS("Neighbourhoods, a station, a landmark…", "Cartiere, o stație, un reper…", "Barrios, una estación, un lugar conocido…")[state.locale])}">${escapeHtml(state.answers[step.id] ?? "")}</textarea>`;
+    return `<label class="sr-only" for="answer-${step.id}">${escapeHtml(localized(step.prompt))}</label><textarea class="textarea-field" id="answer-${step.id}" data-answer-input data-step="${step.id}" maxlength="160" placeholder="${escapeAttr(STRINGS("Neighbourhoods, separated by commas…", "Cartiere, separate prin virgulă…", "Barrios, separados por comas…")[state.locale])}">${escapeHtml(state.answers[step.id] ?? "")}</textarea>`;
   }
   if (step.type === "intro") {
-    return `<label class="sr-only" for="answer-${step.id}">${escapeHtml(localized(step.prompt))}</label><textarea class="textarea-field" id="answer-${step.id}" data-answer-input data-step="${step.id}" maxlength="420" placeholder="${escapeAttr(tr("introPlaceholder"))}">${escapeHtml(state.answers[step.id] ?? "")}</textarea><div class="character-count">${String(state.answers[step.id] ?? "").length} / 420</div>`;
+    const placeholder = state.answers.goal === "offer" ? localized(FIVE("A little about the space and the household…", "Câteva cuvinte despre spațiu și cei de acasă…", "Un poco sobre el espacio y quienes viven allí…", "Quelques mots sur le logement et ses habitants…", "Ein paar Worte zum Wohnraum und zum Haushalt…")) : tr("introPlaceholder");
+    return `<label class="sr-only" for="answer-${step.id}">${escapeHtml(localized(step.prompt))}</label><textarea class="textarea-field" id="answer-${step.id}" data-answer-input data-step="${step.id}" maxlength="420" placeholder="${escapeAttr(placeholder)}">${escapeHtml(state.answers[step.id] ?? "")}</textarea><div class="character-count">${String(state.answers[step.id] ?? "").length} / 420</div>`;
   }
   return "";
 }
@@ -936,17 +895,30 @@ function questionScreen() {
   const [prompt] = questionCopy(step);
   const reaction = questionReaction(step);
   return `<main class="journey-shell" id="main-content">
-    <div class="question-dom${reaction ? " is-reacting" : ""}"><img class="question-dom-image" src="/assets/dom-question.png" alt=""><div class="dom-bubble"><h1 class="journey-title">${escapeHtml(prompt)}</h1></div></div>
-    <p class="dom-reaction" id="question-reaction" aria-live="polite" ${reaction ? "" : "hidden"}>${escapeHtml(reaction)}</p>
+    <div class="question-dom${reaction ? " is-reacting" : ""}"><img class="question-dom-image" src="/assets/dom-question.png" alt=""><div class="dom-conversation"><div class="dom-bubble"><h1 class="journey-title">${escapeHtml(prompt)}</h1></div><p class="dom-thought" id="question-reaction" role="status" aria-live="polite" aria-atomic="true" ${reaction ? "" : "hidden"}>${escapeHtml(reaction)}</p></div></div>
     <section class="journey-card" aria-label="${escapeAttr(prompt)}" key="${step.id}">
       ${renderStepInput(step)}
     </section>
     <p class="inline-error" id="question-error" role="alert" ${state.error ? "" : "hidden"}>${escapeHtml(state.error)}</p>
     <div class="journey-actions">
-      <button class="primary-button" type="button" data-action="step-next">${escapeHtml(state.step === steps.length - 1 ? tr("seeResults") : tr("next"))}${icon("arrow", 18)}</button>
-      <button class="text-button skip-button" type="button" data-action="step-skip">${escapeHtml(tr("skip"))}</button>
+      <button class="primary-button" type="button" data-action="step-next">${escapeHtml(step.id !== "goal" && state.step === steps.length - 1 ? localized(flowText.reviewAction) : tr("next"))}${icon("arrow", 18)}</button>
+      ${["goal", "offerType"].includes(step.id) ? "" : `<button class="text-button skip-button" type="button" data-action="step-skip">${escapeHtml(tr("skip"))}</button>`}
     </div>
   </main>`;
+}
+
+function reviewScreen() {
+  const steps = visibleSteps();
+  function row(step, index) {
+    const chosen = step.options?.find(option => option.value === state.answers[step.id]);
+    const value = hasRecordedAnswer(step) ? chosen ? localized(chosen.title) : humanValue(state.answers[step.id]) : "";
+    return '<button type="button" class="review-row" data-action="edit-step" data-index="' + index + '"><span><strong>' + escapeHtml(questionCopy(step)[0]) + '</strong><span>' + escapeHtml(value) + '</span></span>' + icon("pencil", 16) + '</button>';
+  }
+  const items = steps.map((step, index) => hasRecordedAnswer(step) ? row(step, index) : "").join("");
+  const undecided = steps.map((step, index) => !hasRecordedAnswer(step) ? row(step, index) : "").join("");
+  const more = undecided ? '<details class="review-more"><summary>' + escapeHtml(localized(FIVE("More preferences", "Mai multe preferințe", "Más preferencias", "Plus de préférences", "Weitere Wünsche"))) + '</summary><div class="review-answers">' + undecided + '</div></details>' : "";
+  const peoplePath = ["people", "offer"].includes(state.answers.goal);
+  return '<main class="journey-shell review-shell" id="main-content"><div class="question-dom"><img src="' + DOM_QUESTION_IMAGE + '" alt=""><div class="dom-bubble"><h1>' + escapeHtml(localized(flowText.review)) + '</h1></div></div><div class="review-location">' + icon("pin", 16) + escapeHtml(state.place) + '</div><div class="review-answers">' + items + '</div>' + more + '<p class="optional-label">' + icon("shield", 14) + escapeHtml(localized(flowText.private)) + '</p><div class="journey-actions"><button class="primary-button" type="button" data-action="confirm-search">' + escapeHtml(localized(peoplePath ? flowText.people : flowText.homes)) + icon("arrow", 18) + '</button></div></main>';
 }
 
 function knownPhoto(item) {
@@ -1062,7 +1034,12 @@ function homeRowsForCurrentTab() {
 function noHomesState() {
   if (catalogState === "loading") return `<div class="browse-empty"><img src="${DOM_QUESTION_IMAGE}" alt=""><h3>${escapeHtml(tr("catalogLoading"))}</h3></div>`;
   if (catalogState === "error") return `<div class="browse-empty"><img src="${DOM_QUESTION_IMAGE}" alt=""><h3>${escapeHtml(tr("catalogUnavailable"))}</h3><p>${escapeHtml(tr("catalogUnavailableText"))}</p><button type="button" class="secondary-button" data-action="change-place">${escapeHtml(tr("searchElse"))}</button></div>`;
-  return `<div class="browse-empty"><img src="${DOM_QUESTION_IMAGE}" alt=""><h3>${escapeHtml(tr("noHomes").replace("{place}", state.place))}</h3><p>${escapeHtml(tr("noHomesText"))}</p><button type="button" class="secondary-button" data-action="change-place">${escapeHtml(tr("searchElse"))}</button></div>`;
+  const inCity = homes.some(home => homeCityMatch(home, state.place));
+  const title = inCity
+    ? FIVE("No matches yet", "Încă nu sunt potriviri", "Aún no hay coincidencias", "Pas encore de résultat", "Noch keine passenden Treffer")
+    : FIVE("No homes here yet", "Încă nu sunt locuințe aici", "Aún no hay viviendas aquí", "Pas encore de logements ici", "Hier gibt es noch keine Wohnungen");
+  const adjust = FIVE("Adjust search", "Ajustează căutarea", "Ajustar búsqueda", "Ajuster la recherche", "Suche anpassen");
+  return `<div class="browse-empty"><img src="${DOM_QUESTION_IMAGE}" alt=""><h3>${escapeHtml(localized(title))}</h3><button type="button" class="secondary-button" data-action="start-profile">${escapeHtml(localized(adjust))}</button></div>`;
 }
 
 function browseFilters() {
@@ -1296,7 +1273,7 @@ function profileRows() {
     const complete = hasRecordedAnswer(step);
     const skipped = state.skipped.includes(step.id);
     const value = complete ? humanValue(state.answers[step.id]) : tr(skipped ? "skippedStatus" : "unanswered");
-    return `<div class="profile-edit-row"><div><strong>${escapeHtml(localized(step.prompt))}</strong><span>${escapeHtml(value)}</span></div><button type="button" class="quiet-link" data-action="edit-step" data-index="${index}">${escapeHtml(tr("changeAnswer"))}</button></div>`;
+    return `<div class="profile-edit-row"><div><strong>${escapeHtml(questionCopy(step)[0])}</strong><span>${escapeHtml(value)}</span></div><button type="button" class="quiet-link" data-action="edit-step" data-index="${index}">${escapeHtml(tr("changeAnswer"))}</button></div>`;
   }).join("");
 }
 
@@ -1325,6 +1302,7 @@ function renderMainView() {
   switch (state.view) {
     case "welcome": return welcomeScreen();
     case "questionnaire": return questionScreen();
+    case "review": return reviewScreen();
     case "detail-home": return homeDetailScreen();
     case "detail-person": return personDetailScreen();
     case "together": return togetherScreen();
@@ -1338,7 +1316,7 @@ function renderApp({ scroll = false } = {}) {
   if (!app) return;
   if (!visibleSteps().length) state.step = 0;
   document.documentElement.lang = state.locale;
-  app.innerHTML = `<div class="app-frame">${brandHeader()}${renderMainView()}${["welcome", "questionnaire"].includes(state.view) ? "" : bottomNavigation()}</div>${renderModal()}`;
+  app.innerHTML = `<div class="app-frame">${brandHeader()}${renderMainView()}${["welcome", "questionnaire", "review"].includes(state.view) ? "" : bottomNavigation()}</div>${renderModal()}`;
   bindImageFallbacks();
   persist();
   if (scroll) window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
@@ -1443,10 +1421,11 @@ function openProfile(startIndex = null) {
   const steps = visibleSteps();
   if (startIndex != null) state.step = Math.max(0, Math.min(startIndex, steps.length - 1));
   else {
-    const next = steps.findIndex((step) => !answerComplete(step));
+    const next = steps.findIndex((step) => !answerComplete(step) && !state.skipped.includes(step.id));
     state.step = next >= 0 ? next : 0;
   }
   state.view = "questionnaire";
+  state.editingReview = startIndex != null && state.onboardingComplete;
   state.modal = null;
   state.error = "";
   renderApp({ scroll: true });
@@ -1463,6 +1442,7 @@ function startSearch(place) {
   }
   const changed = placeKey(value) !== placeKey(state.place);
   state.place = value;
+  state.destinationDraft = null;
   state.destinationEdited = true;
   state.locationPrefill = "";
   state.locationSuggestion = null;
@@ -1475,22 +1455,26 @@ function startSearch(place) {
   state.expandedHomes = false;
   state.expandedPeople = false;
   state.tab = ["people", "offer"].includes(state.answers.goal) ? "people" : "homes";
-  state.view = "results";
   state.modal = null;
+  if (!state.onboardingComplete) { openProfile(); return; }
+  if (changed && visibleSteps().some(step => step.id === "areas")) { openProfile(visibleSteps().findIndex(step => step.id === "areas")); return; }
+  state.view = "results";
   persist();
   renderApp({ scroll: true });
 }
 
 function stepBack() {
   state.error = "";
+  if (state.editingReview) { finishProfile(); return; }
+  if (state.view === "review") { state.view = "questionnaire"; state.step = visibleSteps().length - 1; renderApp({ scroll: true }); return; }
   if (state.step > 0) state.step -= 1;
-  else state.view = state.place ? "results" : "welcome";
+  else state.view = state.onboardingComplete ? "results" : "welcome";
   renderApp({ scroll: true });
 }
 
 function finishProfile() {
-  state.view = "results";
-  state.tab = ["people", "offer"].includes(state.answers.goal) ? "people" : "homes";
+  state.view = "review";
+  state.editingReview = false;
   state.error = "";
   persist();
   renderApp({ scroll: true });
@@ -1512,7 +1496,7 @@ function moveToNextQuestion() {
   }
   if (step.id === "upfrontFunds" && (state.answers.upfrontFunds?.amount === "" || state.answers.upfrontFunds?.amount == null)) delete state.answers.upfrontFunds;
   state.skipped = state.skipped.filter((value) => value !== step.id);
-  if (state.step >= steps.length - 1) { finishProfile(); return; }
+  if (state.editingReview || state.step >= steps.length - 1) { finishProfile(); return; }
   state.step += 1;
   renderApp({ scroll: true });
 }
@@ -1520,7 +1504,10 @@ function moveToNextQuestion() {
 function skipQuestion() {
   const steps = visibleSteps();
   const step = currentStep();
+  if (["goal", "offerType"].includes(step.id)) return;
   delete state.answers[step.id];
+  if (step.id === "moveDate") delete state.answers.moveDateRecordedAt;
+  if (step.id === "mustHaves") { delete state.answers.requiredFeatures; delete state.answers.featureRule; }
   if (!state.skipped.includes(step.id)) state.skipped.push(step.id);
   state.error = "";
   if (state.step >= steps.length - 1) { finishProfile(); return; }
@@ -1595,20 +1582,20 @@ function setLanguage(locale) {
 }
 
 function changeGoal(goal) {
-  const previousGoal = state.answers.goal;
-  const changedRentBasis = (previousGoal === "household") !== (goal === "household");
-  const changedSpaceMeaning = (previousGoal === "household") !== (goal === "household");
+  const oldGoal = state.answers.goal;
+  const oldBasis = rentBasisFor(state.answers);
+  const oldSpaceIsNumber = ["home", "household"].includes(oldGoal);
   setAnswer("goal", goal);
-  if (changedRentBasis) {
-    delete state.answers.comfortableRent;
-    delete state.answers.privateCeiling;
-    state.skipped = state.skipped.filter((step) => !["comfortableRent", "privateCeiling"].includes(step));
+  if (oldBasis !== rentBasisFor(state.answers)) {
+    for (const key of ["comfortableRent", "privateCeiling", "upfrontFunds"]) delete state.answers[key];
   }
-  if (changedSpaceMeaning) {
-    delete state.answers.space;
-    state.skipped = state.skipped.filter((step) => step !== "space");
-  }
+  if (oldSpaceIsNumber !== ["home", "household"].includes(goal)) delete state.answers.space;
+  const active = new Set(activeAnswerKeys(state.answers));
+  for (const key of Object.keys(state.answers)) if (!active.has(key)) delete state.answers[key];
+  state.skipped = state.skipped.filter(key => active.has(key));
   state.step = 0;
+  state.onboardingComplete = false;
+  state.editingReview = false;
   persist();
 }
 
@@ -1621,10 +1608,13 @@ function clearPreviewData() {
   state.view = "welcome";
   state.tab = "homes";
   state.place = "";
+  state.destinationDraft = null;
   state.destinationEdited = false;
   state.locationPrefill = "";
   state.locationSuggestion = null;
   state.answers = {};
+  state.onboardingComplete = false;
+  state.editingReview = false;
   state.skipped = [];
   state.step = 0;
   state.savedHomes = [];
@@ -1649,10 +1639,13 @@ function resetDemo() {
   state.view = "welcome";
   state.tab = "homes";
   state.place = "";
+  state.destinationDraft = null;
   state.destinationEdited = false;
   state.locationPrefill = "";
   state.locationSuggestion = null;
   state.answers = {};
+  state.onboardingComplete = false;
+  state.editingReview = false;
   state.skipped = [];
   state.step = 0;
   state.savedHomes = [];
@@ -1830,17 +1823,33 @@ app.addEventListener("click", (event) => {
     if (step.type === "multi") {
       const current = Array.isArray(state.answers[step.id]) ? state.answers[step.id] : [];
       setAnswer(step.id, current.includes(value) ? current.filter((item) => item !== value) : [...current, value]);
+      if (step.id === "mustHaves" && state.answers.featureRule === "required") setAnswer("requiredFeatures", [...(state.answers.mustHaves ?? [])]);
     } else {
       if (step.id === "goal") changeGoal(value);
-      else setAnswer(step.id, value);
+      else {
+        const previous = state.answers[step.id];
+        setAnswer(step.id, value);
+        if (step.id === "offerType" && previous !== value) {
+          delete state.answers.offerRent;
+          const active = new Set(activeAnswerKeys(state.answers));
+          for (const key of Object.keys(state.answers)) if (!active.has(key)) delete state.answers[key];
+          state.skipped = state.skipped.filter(key => active.has(key));
+        }
+      }
     }
     state.error = "";
     const stepId = step.id;
     renderApp();
     app.querySelector(`[data-action="answer-choice"][data-step="${stepId}"][data-value="${CSS.escape(value)}"]`)?.focus();
+  } else if (action === "confirm-search") {
+    state.onboardingComplete = true;
+    state.filterType = ["home", "household"].includes(state.answers.goal) ? "whole-home" : state.answers.goal === "room" ? "room" : "all";
+    state.tab = ["people", "offer"].includes(state.answers.goal) ? "people" : "homes";
+    state.view = "results";
+    persist(); renderApp({ scroll: true });
   } else if (action === "go-tab") switchTab(control.dataset.tab);
   else if (action === "start-profile") openProfile();
-  else if (action === "edit-step") openProfile(Number(control.dataset.index));
+  else if (action === "edit-step") { openProfile(Number(control.dataset.index)); state.editingReview = true; }
   else if (action === "open-home") {
     state.activeHome = id;
     state.view = "detail-home";
@@ -1915,6 +1924,7 @@ app.addEventListener("input", (event) => {
   const field = event.target;
   if (field.id === "destination-input") {
     state.destinationEdited = true;
+    state.destinationDraft = field.value;
     state.locationPrefill = "";
     state.locationSuggestion = null;
     document.querySelector("#location-note")?.remove();
@@ -1948,6 +1958,11 @@ app.addEventListener("input", (event) => {
 
 app.addEventListener("change", (event) => {
   const control = event.target;
+  if (control.matches("[data-action='essential-features']")) {
+    setAnswer("featureRule", control.checked ? "required" : null);
+    setAnswer("requiredFeatures", control.checked ? [...(state.answers.mustHaves ?? [])] : []);
+    return;
+  }
   if (control.matches("[data-action='language']")) {
     setLanguage(control.value);
     return;

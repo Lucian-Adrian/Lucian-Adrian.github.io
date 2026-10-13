@@ -1,3 +1,5 @@
+import { languagePacks } from "./language-settings.js";
+
 const REPLIES = {
   en: {
     open: "I’ll leave that part open for now.",
@@ -844,6 +846,11 @@ const FEATURES = {
   },
 };
 
+for (const [code, pack] of Object.entries(languagePacks)) {
+  REPLIES[code] = pack.replies;
+  FEATURES[code] = pack.features;
+}
+
 function isBlank(stepId, value) {
   if (value == null || value === "") return true;
   if (Array.isArray(value)) return value.length === 0;
@@ -887,6 +894,7 @@ export function domReply(stepId, answers, locale = "en") {
   const copy = REPLIES[language];
 
   if (stepId === "space" && String(answer) === "0" && ["home", "household"].includes(values.goal)) {
+    if (languagePacks[language]) return languagePacks[language].studio;
     return {
       en: "A studio. One room, plenty of little corners to make yours.",
       ro: "O garsonieră. O cameră, multe colțuri numai ale tale.",

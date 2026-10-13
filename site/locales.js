@@ -1,3 +1,5 @@
+import { languagePacks } from "./language-settings.js";
+
 // Keep interface translations separate from source listing text and saved answers.
 const wordRows = `
 tagline|Un chez-soi qui te ressemble.|Ein Zuhause, das zu dir passt.
@@ -419,5 +421,5 @@ for (const row of phraseRows.trim().split('\n')) {
 
 export function translateText(locale, englishText) {
   // Source descriptions stay in their source language; never invent a translation.
-  return phrases[locale]?.get(englishText) ?? englishText;
+  return languagePacks[locale]?.phrases[englishText] ?? phrases[locale]?.get(englishText) ?? englishText;
 }

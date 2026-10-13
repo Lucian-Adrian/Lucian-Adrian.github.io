@@ -3,10 +3,11 @@ import { questionIdsFor, activeAnswerKeys, homeFit, personFit, rentBasisFor } fr
 import { domReply } from "./dom-replies.js";
 import { destinationSuggestions, normalizeDestination } from "./city-picker.js";
 import { renderNumberControl, clampNumber, stageCopy } from "./journey-controls.js";
+import { LANGUAGES, languagePacks, defaultLanguageForCountry } from "./language-settings.js";
 
 const DEMO_MODE = new URLSearchParams(window.location.search).get("demo") === "1";
 const STORAGE_KEY = "domi-product-preview-v1";
-const APP_LANGUAGES = ["en", "ro", "es", "fr", "de"];
+const APP_LANGUAGES = LANGUAGES.map(language => language.code);
 
 const WORDS = {
   en: {
@@ -135,7 +136,8 @@ const WORDS = {
   ...localeWords,
 };
 
-const STRINGS = (en, ro, es) => ({ en, ro, es, fr: translateText("fr", en), de: translateText("de", en) });
+for (const [code, pack] of Object.entries(languagePacks)) WORDS[code] = pack.words;
+const STRINGS = (en, ro, es) => Object.fromEntries(APP_LANGUAGES.map(code => [code, ({ en, ro, es })[code] ?? translateText(code, en)]));
 const localeIndex = () => Math.max(0, APP_LANGUAGES.indexOf(state.locale));
 const tr = (key) => WORDS[state.locale]?.[key] ?? (WORDS.en[key] ? translateText(state.locale, WORDS.en[key]) : key);
 const localized = (value) => typeof value === "string" ? value : (value?.[state.locale] ?? (value?.en ? translateText(state.locale, value.en) : ""));
@@ -190,7 +192,7 @@ function icon(name, size = 20, extra = "") {
 const question = (id, chapter, type, prompt, description, helper, options = []) => ({ id, chapter, type, prompt, description, helper, options });
 const option = (value, iconName, title, description = STRINGS("", "", "")) => ({ value, icon: iconName, title, description });
 
-const FIVE = (en, ro, es, fr, de) => ({ en, ro, es, fr, de });
+const FIVE = (en, ro, es, fr, de) => Object.fromEntries(APP_LANGUAGES.map(code => [code, ({ en, ro, es, fr, de })[code] ?? translateText(code, en)]));
 const flowText = {
   review: FIVE("Does this look right?", "Arată bine așa?", "¿Está bien así?", "Ça te convient ?", "Passt das so?"),
   reviewAction: FIVE("Review", "Verifică", "Revisar", "Vérifier", "Prüfen"),
@@ -309,9 +311,7 @@ const STEPS = [
 ];
 
 function initialLocale() {
-  const browserPreferences = [...(navigator.languages ?? []), navigator.language ?? "en"].map((value) => value.toLowerCase());
-  const match = browserPreferences.find((value) => APP_LANGUAGES.some((language) => value.startsWith(language)));
-  return match?.slice(0, 2) || "en";
+  return "en";
 }
 
 function readSavedState() {
@@ -646,19 +646,13 @@ function citySuggestions() {
 }
 
 function languageForCountry(code) {
-  const country = String(code ?? "").toUpperCase();
-  if (["RO", "MD"].includes(country)) return "ro";
-  if (["ES", "MX", "AR", "CO", "CL", "PE", "VE", "EC", "GT", "CU", "BO", "DO", "HN", "PY", "SV", "NI", "CR", "PA", "UY"].includes(country)) return "es";
-  if (["FR", "BE", "SN", "CI", "CD", "CM", "MG", "LU"].includes(country)) return "fr";
-  if (["DE", "AT", "CH"].includes(country)) return "de";
-  if (["US", "GB", "IE", "AU", "NZ", "CA", "IN", "ZA", "SG"].includes(country)) return "en";
-  return "";
+  return defaultLanguageForCountry(code);
 }
 
 async function suggestApproximateLocation() {
-  if (state.view !== "welcome" || state.destinationEdited || state.place) return;
   try {
-    const response = await fetch("/api/location", { headers: { Accept: "application/json" }, cache: "no-store" });
+    const endpoint = window.location.hostname === "lucian-adrian.github.io" ? "https://trydomi.vercel.app/api/location" : "/api/location";
+    const response = await fetch(endpoint, { headers: { Accept: "application/json" }, cache: "no-store" });
     if (!response.ok) return;
     const place = await response.json();
     const city = String(place.city ?? "").trim();
@@ -668,9 +662,8 @@ async function suggestApproximateLocation() {
       ? place.confidence >= 0.8 ? "high" : place.confidence >= 0.4 ? "medium" : "low"
       : String(place.confidence ?? "medium").toLowerCase();
 
-    if (!state.localeManuallySet && state.view === "welcome") {
-      const suggestedLocale = APP_LANGUAGES.includes(place.locale) ? place.locale : languageForCountry(place.countryCode);
-      if (suggestedLocale) state.locale = suggestedLocale;
+    if (!state.localeManuallySet) {
+      state.locale = languageForCountry(place.countryCode);
     }
     if (candidate && confidence !== "low" && !state.destinationEdited && !state.place && state.view === "welcome") {
       state.locationPrefill = candidate;
@@ -683,8 +676,7 @@ async function suggestApproximateLocation() {
 }
 
 function languagePicker() {
-  const options = [["en", "EN"], ["ro", "RO"], ["es", "ES"], ["fr", "FR"], ["de", "DE"]]
-    .map(([code, name]) => `<option value="${code}" ${state.locale === code ? "selected" : ""}>${name}</option>`).join("");
+  const options = LANGUAGES.map(({ code, name }) => `<option value="${code}" label="${code.toUpperCase()}" ${state.locale === code ? "selected" : ""}>${escapeHtml(name)}</option>`).join("");
   return `<label class="language-wrap"><span class="sr-only">${escapeHtml(tr("language"))}</span><select class="language-select" data-action="language" aria-label="${escapeAttr(tr("language"))}">${options}</select></label>`;
 }
 
@@ -843,6 +835,7 @@ function updateQuestionReaction() {
   const previousReaction = reactionElement.textContent;
   reactionElement.textContent = reaction;
   reactionElement.hidden = !reaction;
+  reactionElement.closest(".dom-cloud").hidden = !reaction;
   const steps = visibleSteps();
   const nextButton = app.querySelector('[data-action="step-next"]');
   if (nextButton) nextButton.disabled = !answerComplete(step);
@@ -951,6 +944,10 @@ function renderStepInput(step) {
   return "";
 }
 
+function cloudShape() {
+  return '<svg class="dom-cloud-shape" viewBox="0 0 300 150" preserveAspectRatio="none" aria-hidden="true"><path d="M24 42C17 20 45 9 68 19C81 -2 113 1 128 14C146 -3 181 0 195 18C221 4 252 19 250 35C283 29 301 55 289 76C307 97 285 124 260 120C254 148 214 155 193 137C175 155 137 152 122 137C98 156 63 144 61 128C31 139 6 119 14 98C-9 82 0 53 24 42Z"/></svg>';
+}
+
 function questionScreen() {
   const steps = visibleSteps();
   if (state.step >= steps.length) state.step = Math.max(0, steps.length - 1);
@@ -958,7 +955,8 @@ function questionScreen() {
   const [prompt] = questionCopy(step);
   const reaction = questionReaction(step);
   return `<main class="journey-shell${state.lastRenderedQuestion !== step.id ? " is-step-entering" : ""}" id="main-content">
-    <div class="question-dom${reaction ? " is-reacting" : ""}"><img class="question-dom-image" src="/assets/dom-question.png" alt=""><div class="dom-conversation"><div class="dom-bubble"><h1 class="journey-title">${escapeHtml(prompt)}</h1></div><p class="dom-thought" id="question-reaction" role="status" aria-live="polite" aria-atomic="true" ${reaction ? "" : "hidden"}>${escapeHtml(reaction)}</p></div></div>
+    <h1 class="journey-title">${escapeHtml(prompt)}</h1>
+    <div class="question-dom${reaction ? " is-reacting" : ""}"><img class="question-dom-image" src="/assets/dom-question.png" alt="Dom"><div class="dom-cloud" ${reaction ? "" : "hidden"}>${cloudShape()}<p class="dom-thought" id="question-reaction" role="status" aria-live="polite" aria-atomic="true" ${reaction ? "" : "hidden"}>${escapeHtml(reaction)}</p></div></div>
     <section class="journey-card" aria-label="${escapeAttr(prompt)}" key="${step.id}">
       ${renderStepInput(step)}
     </section>
@@ -981,7 +979,7 @@ function reviewScreen() {
   const undecided = steps.map((step, index) => !hasRecordedAnswer(step) ? row(step, index) : "").join("");
   const more = undecided ? '<details class="review-more"><summary>' + escapeHtml(localized(FIVE("More preferences", "Mai multe preferințe", "Más preferencias", "Plus de préférences", "Weitere Wünsche"))) + '</summary><div class="review-answers">' + undecided + '</div></details>' : "";
   const peoplePath = ["people", "offer"].includes(state.answers.goal);
-  return '<main class="journey-shell review-shell" id="main-content"><div class="question-dom"><img src="' + DOM_QUESTION_IMAGE + '" alt=""><div class="dom-bubble"><h1>' + escapeHtml(localized(flowText.review)) + '</h1></div></div><div class="review-location">' + icon("pin", 16) + escapeHtml(state.place) + '</div><div class="review-answers">' + items + '</div>' + more + '<p class="optional-label">' + icon("shield", 14) + escapeHtml(localized(flowText.private)) + '</p><div class="journey-actions"><button class="primary-button" type="button" data-action="confirm-search">' + escapeHtml(localized(peoplePath ? flowText.people : flowText.homes)) + icon("arrow", 18) + '</button></div></main>';
+  return '<main class="journey-shell review-shell" id="main-content"><h1 class="journey-title">' + escapeHtml(localized(flowText.review)) + '</h1><div class="question-dom"><img src="' + DOM_QUESTION_IMAGE + '" alt="Dom"><div class="dom-cloud">' + cloudShape() + '<p class="dom-thought">' + escapeHtml(localized(flowText.private)) + '</p></div></div><div class="review-location">' + icon("pin", 16) + escapeHtml(state.place) + '</div><div class="review-answers">' + items + '</div>' + more + '<div class="journey-actions"><button class="primary-button" type="button" data-action="confirm-search">' + escapeHtml(localized(peoplePath ? flowText.people : flowText.homes)) + icon("arrow", 18) + '</button></div></main>';
 }
 
 function knownPhoto(item) {

@@ -1,3 +1,5 @@
+import { languagePacks } from "./language-settings.js";
+
 const STEP_COPY = {
   en: {
     budget: (goal) => goal === "offer"
@@ -120,6 +122,8 @@ export function stageCopy(chapter, locale = "en", goal = "") {
     life: "daily",
     meet: "intro",
   })[chapter] ?? chapter;
+  const extra = languagePacks[locale]?.stages;
+  if (extra) return extra[goal === "offer" && ["budget", "intro"].includes(key) ? `${key}Offer` : key] ?? "";
   const copy = language[key];
   return typeof copy === "function" ? copy(goal) : (copy ?? "");
 }
